@@ -1,0 +1,62 @@
+﻿<Window x:Class="TcfGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:TcfGenerator"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="400" Width="525"
+        x:Name="MyWin">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary x:Uid="ResourceDictionary_1" Source="ResourceDictionary.xaml"></ResourceDictionary>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+    
+    <Grid Margin="0,0,2,-1">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="0.2*"/>
+            <RowDefinition Height="8*"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="6*"/>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="6*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+        <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Note</Label>
+        <TextBox x:Name="excelNote" Grid.Row="0" Grid.Column="1" Text="Sheet 1"  Style="{StaticResource textStyle}"></TextBox>
+        <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Column</Label>
+        <TextBox x:Name="excelColumn" Grid.Row="1" Grid.Column="1" Text="A" Style="{StaticResource textStyle}"></TextBox>
+        <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Test Step</Label>
+
+        <ComboBox x:Name="testStep" Grid.Row="0" Grid.Column="3" ItemsSource="{Binding TestStepList}" 
+                  SelectionChanged="TestStepChanged" Style="{StaticResource comboStyle}"
+                  DisplayMemberPath="Item2" SelectedValuePath="Item1"
+                  />
+        <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Setting</Label>
+        <ComboBox x:Name="Property" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding PropList}" Style="{StaticResource comboStyle}"
+                  DisplayMemberPath="Item2" SelectedValuePath="Item1"
+                  />
+
+        <Button x:Name="Add" Click="Add_One" Grid.Row="0" Grid.Column="5" Style="{StaticResource buttonStyle}">Add</Button>
+        <Button x:Name="Delete" Click="Delete_One" Grid.Row="1" Grid.Column="5" Style="{StaticResource buttonStyle}">Delete</Button>
+        <GridSplitter Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Height="3" Background="Red" VerticalAlignment="Stretch"></GridSplitter>
+        <DataGrid x:Name="tapMapping" Grid.Row="3" Grid.ColumnSpan="5" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
+                  AutoGenerateColumns="False" IsReadOnly="True">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Column in Excel" Width="3*" Binding="{Binding ExcelColumn}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
+                <DataGridTextColumn Header="TestStep" Width="4*" Binding="{Binding TestStep_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Setting" Width="3*" Binding="{Binding Property_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
+                <DataGridTextColumn Header="Type" Width="3*" Binding="{Binding PropertyType}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
+            </DataGrid.Columns>
+        </DataGrid>
+    </Grid>
+
+</Window>
