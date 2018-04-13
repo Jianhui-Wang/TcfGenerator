@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml;
+using System.Xml.Serialization;
 
 namespace TcfGenerator
 {
@@ -35,7 +37,6 @@ namespace TcfGenerator
             TestStepList = new ObservableCollection<Tuple<string,string>>();
             PropList = new ObservableCollection<Tuple<string,string,string>>();
             SettingMappings = new ObservableCollection<SettingMapping>();
-            ValueMappings = new ObservableCollection<ValueMapping>();
             rule_idx = 0;
 
             InitializeTestStepList(@"c:\temp\test.xml");
@@ -120,9 +121,9 @@ namespace TcfGenerator
 
             var teststep = Node_TestSteps.ChildNodes[teststep_idx];
 
-            ValueMappings.Clear();
+            ValueMappings = new ObservableCollection<ValueMapping>();
 
-            foreach(XmlNode p in teststep.ChildNodes)
+            foreach (XmlNode p in teststep.ChildNodes)
             {
                 if (PropList[property_idx].Item1 == p.Attributes["Name"].Value)
                 {
@@ -133,6 +134,7 @@ namespace TcfGenerator
                         || typeAttr != null && typeAttr.Value.StartsWith("Enumeration"))
                     {
                         var values = p.ChildNodes;
+
                         foreach (XmlNode v in values)
                         {
                             ValueMappings.Add(new TcfGenerator.ValueMapping() { TapValue = v.InnerText, ExcelValue = "" });
@@ -143,8 +145,27 @@ namespace TcfGenerator
 
         }
 
+        private void Save_SettingMapping(object sender, RoutedEventArgs e)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
+            FileStream xmlStream = new FileStream(@"c:\temp\test2.xml", FileMode.Create);
+            serializer.Serialize(xmlStream, SettingMappings);
+            xmlStream.Close();
+        }
+
+        private void Load_SettingMapping(object sender, RoutedEventArgs e)
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
+            FileStream xmlStream = new FileStream(@"c:\temp\test2.xml", FileMode.Open);
+            object o = serializer.Deserialize(xmlStream);
+            SettingMappings = o as ObservableCollection<SettingMapping>;
+            xmlStream.Close();
+            tapMapping.DataContext = SettingMappings;
+            rule_idx = SettingMappings.Count;
+        }
     }
 
+    [Serializable]
     public class SettingMapping
     {
         public int Serial { get; set; }
