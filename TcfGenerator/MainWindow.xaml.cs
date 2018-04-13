@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -43,6 +44,7 @@ namespace TcfGenerator
             tapMapping.DataContext = SettingMappings;
             testStep.DataContext = this;
             Property.DataContext = this;
+            tapTestName.DataContext = this;
         }
 
         private void InitializeTestStepList(string xmlFile)
@@ -148,20 +150,35 @@ namespace TcfGenerator
         private void Save_SettingMapping(object sender, RoutedEventArgs e)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
-            FileStream xmlStream = new FileStream(@"c:\temp\test2.xml", FileMode.Create);
-            serializer.Serialize(xmlStream, SettingMappings);
-            xmlStream.Close();
+            SaveFileDialog dialog = new SaveFileDialog();
+            string filename = "";
+
+            if (dialog.ShowDialog() == true)
+            {
+                filename = dialog.FileName;
+                FileStream xmlStream = new FileStream(filename, FileMode.Create);
+                serializer.Serialize(xmlStream, SettingMappings);
+                xmlStream.Close();
+            }
         }
 
         private void Load_SettingMapping(object sender, RoutedEventArgs e)
         {
             XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
-            FileStream xmlStream = new FileStream(@"c:\temp\test2.xml", FileMode.Open);
-            object o = serializer.Deserialize(xmlStream);
-            SettingMappings = o as ObservableCollection<SettingMapping>;
-            xmlStream.Close();
-            tapMapping.DataContext = SettingMappings;
-            rule_idx = SettingMappings.Count;
+            OpenFileDialog dialog = new OpenFileDialog();
+            string filename = "";
+
+            if (dialog.ShowDialog() == true)
+            {
+                filename = dialog.FileName;
+
+                FileStream xmlStream = new FileStream(filename, FileMode.Open);
+                object o = serializer.Deserialize(xmlStream);
+                SettingMappings = o as ObservableCollection<SettingMapping>;
+                xmlStream.Close();
+                tapMapping.DataContext = SettingMappings;
+                rule_idx = SettingMappings.Count;
+            }
         }
     }
 
