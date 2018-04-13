@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:TcfGenerator"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="525"
+        Title="MainWindow" Height="400" Width="712"
         x:Name="MyWin">
 
     <Window.Resources>
@@ -15,48 +15,97 @@
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Window.Resources>
-    
-    <Grid Margin="0,0,2,-1">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="1*"/>
-            <RowDefinition Height="0.2*"/>
-            <RowDefinition Height="8*"/>
-        </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="6*"/>
-            <ColumnDefinition Width="4*"/>
-            <ColumnDefinition Width="6*"/>
-            <ColumnDefinition Width="3*"/>
-        </Grid.ColumnDefinitions>
-        <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Note</Label>
-        <TextBox x:Name="excelNote" Grid.Row="0" Grid.Column="1" Text="Sheet 1"  Style="{StaticResource textStyle}"></TextBox>
-        <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Column</Label>
-        <TextBox x:Name="excelColumn" Grid.Row="1" Grid.Column="1" Text="A" Style="{StaticResource textStyle}"></TextBox>
-        <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Test Step</Label>
 
-        <ComboBox x:Name="testStep" Grid.Row="0" Grid.Column="3" ItemsSource="{Binding TestStepList}" 
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="10*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+        
+        <Grid Margin="0,0,0,0" Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="0.2*"/>
+                <RowDefinition Height="8*"/>
+            </Grid.RowDefinitions>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="6*"/>
+                <ColumnDefinition Width="4*"/>
+                <ColumnDefinition Width="6*"/>
+                <ColumnDefinition Width="3*"/>
+            </Grid.ColumnDefinitions>
+            <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Note</Label>
+            <TextBox x:Name="excelNote" Grid.Row="0" Grid.Column="1" Text="Sheet 1"  Style="{StaticResource textStyle}"></TextBox>
+            <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Column</Label>
+            <TextBox x:Name="excelColumn" Grid.Row="1" Grid.Column="1" Text="A" Style="{StaticResource textStyle}"></TextBox>
+            <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Test Step</Label>
+
+            <ComboBox x:Name="testStep" Grid.Row="0" Grid.Column="3" ItemsSource="{Binding TestStepList}" 
                   SelectionChanged="TestStepChanged" Style="{StaticResource comboStyle}"
                   DisplayMemberPath="Item2" SelectedValuePath="Item1"
                   />
-        <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Setting</Label>
-        <ComboBox x:Name="Property" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding PropList}" Style="{StaticResource comboStyle}"
-                  DisplayMemberPath="Item2" SelectedValuePath="Item1"
+            <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Setting</Label>
+            <ComboBox x:Name="Property" Grid.Row="1" Grid.Column="3" ItemsSource="{Binding PropList}" Style="{StaticResource comboStyle}"
+                  DisplayMemberPath="Item2" SelectedValuePath="Item1" SelectionChanged="PropertyChanged"
                   />
 
-        <Button x:Name="Add" Click="Add_One" Grid.Row="0" Grid.Column="5" Style="{StaticResource buttonStyle}">Add</Button>
-        <Button x:Name="Delete" Click="Delete_One" Grid.Row="1" Grid.Column="5" Style="{StaticResource buttonStyle}">Delete</Button>
-        <GridSplitter Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Height="3" Background="Red" VerticalAlignment="Stretch"></GridSplitter>
-        <DataGrid x:Name="tapMapping" Grid.Row="3" Grid.ColumnSpan="5" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
-                  AutoGenerateColumns="False" IsReadOnly="True">
-            <DataGrid.Columns>
-                <DataGridTextColumn Header="Column in Excel" Width="3*" Binding="{Binding ExcelColumn}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
-                <DataGridTextColumn Header="TestStep" Width="4*" Binding="{Binding TestStep_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
-                <DataGridTextColumn Header="Setting" Width="3*" Binding="{Binding Property_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
-                <DataGridTextColumn Header="Type" Width="3*" Binding="{Binding PropertyType}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}"></DataGridTextColumn>
-            </DataGrid.Columns>
-        </DataGrid>
+            <Button x:Name="Add" Click="Add_One" Grid.Row="0" Grid.Column="5" Style="{StaticResource buttonStyle}">Add</Button>
+            <Button x:Name="Delete" Click="Delete_One" Grid.Row="1" Grid.Column="5" Style="{StaticResource buttonStyle}">Delete</Button>
+            <GridSplitter Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Height="3" Background="Red" VerticalAlignment="Stretch"></GridSplitter>
+            <DataGrid x:Name="tapMapping" Grid.Row="3" Grid.ColumnSpan="5" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
+                  AutoGenerateColumns="False" IsReadOnly="False">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Serial" Width="1.5*" Binding="{Binding Serial}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                    <DataGridTextColumn Header="Excel Col" Width="2*" Binding="{Binding ExcelColumn}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                    <DataGridTextColumn Header="TestStep" Width="4*" Binding="{Binding TestStep_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                    <DataGridTextColumn Header="Setting" Width="3*" Binding="{Binding Property_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                    <DataGridTextColumn Header="Type" Width="3*" Binding="{Binding PropertyType}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                    <DataGridTemplateColumn Header="Value Mapping" Width="5*">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="..."></TextBlock>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                        <DataGridTemplateColumn.CellEditingTemplate>
+                            <DataTemplate>
+                                <DataGrid HeadersVisibility="Column" ItemsSource="{Binding ValMapping}" AutoGenerateColumns="False" CanUserAddRows="False" 
+                                          MaxHeight="100" MaxWidth="200">
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn Header="Excel Value" Width="100" Binding="{Binding ExcelValue}"></DataGridTextColumn>
+                                        <DataGridTextColumn Header="TAP Step Value" Width="100" Binding="{Binding TapValue}"></DataGridTextColumn>
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellEditingTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+
+                <!--<DataGrid.RowDetailsTemplate>
+                    <DataTemplate>
+                        <DataGrid HeadersVisibility="None" ItemsSource="{Binding}" AutoGenerateColumns="False" CanUserAddRows="False">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="Excel Value" Width="100" Binding="{Binding ExcelValue}"></DataGridTextColumn>
+                                <DataGridTextColumn Header="TAP Step Value" Width="100" Binding="{Binding TapValue}"></DataGridTextColumn>
+                            </DataGrid.Columns>
+                        </DataGrid>
+                    </DataTemplate>
+                </DataGrid.RowDetailsTemplate>-->
+            </DataGrid>
+        </Grid>
+        
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <Button Grid.Column="0" Content="Load" Style="{StaticResource buttonStyle}"></Button>
+            <Button Grid.Column="1" Content="Save" Style="{StaticResource buttonStyle}"></Button>
+            <Button Grid.Column="2" Content="Generate TAP TestPlan" Style="{StaticResource buttonStyle}"></Button>
+        </Grid>
+        
     </Grid>
 
 </Window>

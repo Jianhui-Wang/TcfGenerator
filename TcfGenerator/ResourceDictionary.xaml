@@ -3,7 +3,7 @@
                     xmlns:local="clr-namespace:TcfGenerator">
 
     <Style x:Key="infoLabelStyle" TargetType="{x:Type Label}">
-        <Setter Property="Margin" Value="1,1,1,1" />
+        <Setter Property="Margin" Value="20,1,1,1" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Bold"/>
@@ -31,6 +31,7 @@
 
     <Style x:Key="datagridColumnHeaderStyle" TargetType="DataGridColumnHeader">
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
+        <Setter Property="FontWeight" Value="Normal"/>
     </Style>
 
 </ResourceDictionary>
