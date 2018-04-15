@@ -22,6 +22,7 @@ namespace TcfGenerator
 {
     public partial class MainWindow : Window
     {
+        public ObservableCollection<TestMapping> TestMappings { get; set; }
         public ObservableCollection<SettingMapping> SettingMappings { get; set; }
         public ObservableCollection<Tuple<string,string>> TestStepList { get; set; }
         public ObservableCollection<Tuple<string,string,string>> PropList { get; set; }
@@ -29,7 +30,8 @@ namespace TcfGenerator
         private ObservableCollection<ValueMapping> ValueMappings { get; set; }
         private XmlNode Node_TestSteps;
         private int teststep_idx;
-        private int rule_idx;
+        private int testmapping_rule_idx;
+        private int settingmapping_rule_idx;
 
         public MainWindow()
         {
@@ -38,10 +40,12 @@ namespace TcfGenerator
             TestStepList = new ObservableCollection<Tuple<string,string>>();
             PropList = new ObservableCollection<Tuple<string,string,string>>();
             SettingMappings = new ObservableCollection<SettingMapping>();
-            rule_idx = 0;
+            TestMappings = new ObservableCollection<TestMapping>();
+            settingmapping_rule_idx = 0;
 
             InitializeTestStepList(@"c:\temp\test.xml");
-            tapMapping.DataContext = SettingMappings;
+            settingMapping.DataContext = SettingMappings;
+            testMapping.DataContext = TestMappings;
             testStep.DataContext = this;
             Property.DataContext = this;
             tapTestName.DataContext = this;
@@ -80,7 +84,7 @@ namespace TcfGenerator
             }
         }
 
-        private void Add_One(object sender, RoutedEventArgs e)
+        private void Add_SettingMapping(object sender, RoutedEventArgs e)
         {
             SettingMapping m = new SettingMapping();
             int teststep_idx = testStep.SelectedIndex;
@@ -88,7 +92,7 @@ namespace TcfGenerator
 
             if (teststep_idx != -1 && property_idx != -1)
             {
-                m.Serial = ++rule_idx;
+                m.Serial = ++settingmapping_rule_idx;
                 m.ExcelColumn = excelColumn.Text;
                 m.TestStep = TestStepList[teststep_idx].Item1;
                 m.TestStep_DispName = TestStepList[teststep_idx].Item2 ;
@@ -98,21 +102,21 @@ namespace TcfGenerator
                 m.ValMapping = ValueMappings;
                 SettingMappings.Add(m);
 
-                tapMapping.Items.Refresh();
+                settingMapping.Items.Refresh();
             }
         }
 
-        private void Delete_One(object sender, RoutedEventArgs e)
+        private void Delete_SettingMapping(object sender, RoutedEventArgs e)
         {
-            int index = tapMapping.SelectedIndex;
+            int index = settingMapping.SelectedIndex;
             if (index == -1) return;
             SettingMappings.RemoveAt(index);
-            rule_idx--;
+            settingmapping_rule_idx--;
             for (int i = index; i<SettingMappings.Count; i++)
             {
                 SettingMappings[i].Serial = i + 1;
             }
-            tapMapping.Items.Refresh();
+            settingMapping.Items.Refresh();
         }
 
         private void PropertyChanged(object sender, SelectionChangedEventArgs e)
@@ -147,9 +151,10 @@ namespace TcfGenerator
 
         }
 
-        private void Save_SettingMapping(object sender, RoutedEventArgs e)
+        private void Save_MappingRules(object sender, RoutedEventArgs e)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
+            MappingRules mr = new MappingRules(TestMappings, SettingMappings);
+            XmlSerializer serializer = new XmlSerializer(typeof(MappingRules));
             SaveFileDialog dialog = new SaveFileDialog();
             string filename = "";
 
@@ -157,14 +162,14 @@ namespace TcfGenerator
             {
                 filename = dialog.FileName;
                 FileStream xmlStream = new FileStream(filename, FileMode.Create);
-                serializer.Serialize(xmlStream, SettingMappings);
+                serializer.Serialize(xmlStream, mr);
                 xmlStream.Close();
             }
         }
 
-        private void Load_SettingMapping(object sender, RoutedEventArgs e)
+        private void Load_MappingRules(object sender, RoutedEventArgs e)
         {
-            XmlSerializer serializer = new XmlSerializer(typeof(ObservableCollection<SettingMapping>));
+            XmlSerializer serializer = new XmlSerializer(typeof(MappingRules));
             OpenFileDialog dialog = new OpenFileDialog();
             string filename = "";
 
@@ -174,11 +179,47 @@ namespace TcfGenerator
 
                 FileStream xmlStream = new FileStream(filename, FileMode.Open);
                 object o = serializer.Deserialize(xmlStream);
-                SettingMappings = o as ObservableCollection<SettingMapping>;
+                var t = o as MappingRules;
                 xmlStream.Close();
-                tapMapping.DataContext = SettingMappings;
-                rule_idx = SettingMappings.Count;
+                TestMappings = t.testMappings;
+                SettingMappings = t.settingMappings;
+                testMapping.DataContext = TestMappings;
+                testmapping_rule_idx = TestMappings.Count;
+                settingMapping.DataContext = SettingMappings; 
+                settingmapping_rule_idx = SettingMappings.Count;
             }
+        }
+
+        private void Add_TestMapping(object sender, RoutedEventArgs e)
+        {
+            TestMapping m = new TestMapping();
+            int teststep_idx = tapTestName.SelectedIndex;
+
+            if (teststep_idx != -1)
+            {
+                m.Serial = ++testmapping_rule_idx;
+                m.TestStep = TestStepList[teststep_idx].Item1;
+                m.TestStep_DispName = TestStepList[teststep_idx].Item2;
+                m.MatchRule = testMappingRule.SelectedValue.ToString().Split(':')[1];
+                m.Keyword = keyword.Text;
+                TestMappings.Add(m);
+
+                testMapping.Items.Refresh();
+            }
+
+        }
+
+        private void Delete_TestMapping(object sender, RoutedEventArgs e)
+        {
+            int index = testMapping.SelectedIndex;
+            if (index == -1) return;
+            TestMappings.RemoveAt(index);
+            testmapping_rule_idx--;
+            for (int i = index; i < TestMappings.Count; i++)
+            {
+                TestMappings[i].Serial = i + 1;
+            }
+            testMapping.Items.Refresh();
         }
     }
 
@@ -193,6 +234,33 @@ namespace TcfGenerator
         public string Property_DispName{ get; set; }
         public string PropertyType { get; set; }
         public ObservableCollection<ValueMapping> ValMapping { get; set; }
+    }
+
+    [Serializable]
+    public class TestMapping
+    {
+        public int Serial { get; set; }
+        public string MatchRule { get; set; }
+        public string Keyword { get; set; }
+        public string TestStep { get; set; }
+        public string TestStep_DispName { get; set; }
+    }
+
+    [Serializable]
+    public class MappingRules
+    {
+        public ObservableCollection<TestMapping> testMappings { get; set; }
+        public ObservableCollection<SettingMapping> settingMappings { get; set; }
+        public MappingRules()
+        {
+            testMappings = new ObservableCollection<TestMapping>();
+            settingMappings = new ObservableCollection<SettingMapping>();
+        }
+        public MappingRules(ObservableCollection<TestMapping> tm, ObservableCollection<SettingMapping> sm)
+        {
+            testMappings = tm;
+            settingMappings = sm;
+        }
     }
 
     public class ValueMapping
