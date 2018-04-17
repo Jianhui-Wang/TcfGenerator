@@ -17,21 +17,26 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xml;
 using System.Xml.Serialization;
+using Keysight.S8901A.Common;
 
 namespace TcfGenerator
 {
     public partial class MainWindow : Window
     {
+        #region Object bind with UI
         public ObservableCollection<TestMapping> TestMappings { get; set; }
         public ObservableCollection<SettingMapping> SettingMappings { get; set; }
-        public ObservableCollection<Tuple<string,string>> TestStepList { get; set; }
-        public ObservableCollection<Tuple<string,string,string>> PropList { get; set; }
+        public ObservableCollection<Tuple<string /*Name*/,string /*DisplayName*/>> TestStepList { get; set; }
+        public ObservableCollection<Tuple<string /*Name*/, string /*DisplayName*/,string /*Type*/>> PropList { get; set; }
+        public ObservableCollection<Tuple<string /*EnumValueName*/,int /*EnumValue*/>> TestItemList { get; set; }
+        #endregion
 
         private ObservableCollection<ValueMapping> ValueMappings { get; set; }
         private XmlNode Node_TestSteps;
-        private int teststep_idx;
-        private int testmapping_rule_idx;
-        private int settingmapping_rule_idx;
+        private XmlNode Node_TestItems;
+        private int teststep_idx; /* Selected item index of the teststep ComboBox */
+        private int testmapping_rule_idx; /* the top cursor of the TestMappings array */
+        private int settingmapping_rule_idx; /* the top cursor of the SettingMappings array */
 
         public MainWindow()
         {
@@ -41,27 +46,40 @@ namespace TcfGenerator
             PropList = new ObservableCollection<Tuple<string,string,string>>();
             SettingMappings = new ObservableCollection<SettingMapping>();
             TestMappings = new ObservableCollection<TestMapping>();
+            TestItemList = new ObservableCollection<Tuple<string,int>>();
             settingmapping_rule_idx = 0;
+            testmapping_rule_idx = 0;
 
-            InitializeTestStepList(@"c:\temp\test.xml");
+            InitializeTestList(@"c:\temp\test.xml");
+
             settingMapping.DataContext = SettingMappings;
             testMapping.DataContext = TestMappings;
-            testStep.DataContext = this;
+            testItem.DataContext = this;
+            testStep1.DataContext = this;
+            testStep2.DataContext = this;
             Property.DataContext = this;
-            tapTestName.DataContext = this;
         }
 
-        private void InitializeTestStepList(string xmlFile)
+        private void InitializeTestList(string xmlFile)
         {
             XmlDocument xml = new XmlDocument();
             xml.Load(xmlFile);
 
-            Node_TestSteps = xml.SelectSingleNode("TestSteps");
+            Node_TestSteps = xml.SelectSingleNode("Root").ChildNodes[0];
+            Node_TestItems = xml.SelectSingleNode("Root").ChildNodes[1];
+
             foreach (var teststep in Node_TestSteps.ChildNodes)
             {
                 string n = (teststep as XmlNode).Attributes["Name"].Value;
                 string d = (teststep as XmlNode).Attributes["DisplayName"].Value;
                 TestStepList.Add(new Tuple<string, string>(n,d));
+            }
+
+            foreach (var testitem in Node_TestItems.ChildNodes)
+            {
+                string n = (testitem as XmlNode).Attributes["Name"].Value;
+                int v = Convert.ToInt16((testitem as XmlNode).Attributes["Value"].Value);
+                TestItemList.Add(new Tuple<string, int>(n, v));
             }
         }
 
@@ -87,7 +105,7 @@ namespace TcfGenerator
         private void Add_SettingMapping(object sender, RoutedEventArgs e)
         {
             SettingMapping m = new SettingMapping();
-            int teststep_idx = testStep.SelectedIndex;
+            int teststep_idx = testStep1.SelectedIndex;
             int property_idx = Property.SelectedIndex;
 
             if (teststep_idx != -1 && property_idx != -1)
@@ -193,7 +211,7 @@ namespace TcfGenerator
         private void Add_TestMapping(object sender, RoutedEventArgs e)
         {
             TestMapping m = new TestMapping();
-            int teststep_idx = tapTestName.SelectedIndex;
+            int teststep_idx = testStep1.SelectedIndex;
 
             if (teststep_idx != -1)
             {
@@ -202,6 +220,7 @@ namespace TcfGenerator
                 m.TestStep_DispName = TestStepList[teststep_idx].Item2;
                 m.MatchRule = testMappingRule.SelectedValue.ToString().Split(':')[1];
                 m.Keyword = keyword.Text;
+                m.TestItem = (TestItem_Enum)(testItem.SelectedValue);
                 TestMappings.Add(m);
 
                 testMapping.Items.Refresh();
@@ -220,6 +239,12 @@ namespace TcfGenerator
                 TestMappings[i].Serial = i + 1;
             }
             testMapping.Items.Refresh();
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            ExcelParser ep = new ExcelParser();
+            ep.ParseExcel();
         }
     }
 
@@ -244,6 +269,7 @@ namespace TcfGenerator
         public string Keyword { get; set; }
         public string TestStep { get; set; }
         public string TestStep_DispName { get; set; }
+        public TestItem_Enum TestItem { get; set; }
     }
 
     [Serializable]

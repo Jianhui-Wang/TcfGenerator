@@ -29,6 +29,8 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
+                        <RowDefinition Height="1*"/>
                         <RowDefinition Height="0.2*"/>
                         <RowDefinition Height="8*"/>
                     </Grid.RowDefinitions>
@@ -46,7 +48,13 @@
                     <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Test Column</Label>
                     <TextBox x:Name="excelTestColumn" Grid.Row="1" Grid.Column="1" Text="A" Style="{StaticResource textStyle}"></TextBox>
 
-                    <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Map Condition</Label>
+                    <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Start Row</Label>
+                    <TextBox x:Name="excelStartRow" Grid.Row="2" Grid.Column="1" Text="2" Style="{StaticResource textStyle}"></TextBox>
+                    <Label Grid.Row="3" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel End Row</Label>
+                    <TextBox x:Name="excelEndRow" Grid.Row="3" Grid.Column="1" Text="3" Style="{StaticResource textStyle}"></TextBox>
+
+
+                    <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Match Rule</Label>
                     <ComboBox x:Name="testMappingRule" Grid.Row="0" Grid.Column="3" Style="{StaticResource comboStyle}">
                         <ComboBoxItem>Equals</ComboBoxItem>
                         <ComboBoxItem>StartWith</ComboBoxItem>
@@ -55,20 +63,27 @@
                     </ComboBox>
                     <TextBox x:Name="keyword" Grid.Row="0" Grid.Column="4" Style="{StaticResource textStyle}">Keyword</TextBox>
 
-                    <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Target Test Step</Label>
-                    <ComboBox x:Name="tapTestName" Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestStepList}"
+                    <Label Grid.Row="2" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Target Test Item</Label>
+                    
+                    
+                    <ComboBox x:Name="testStep1" Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestStepList}"
                         SelectionChanged="TestStepChanged"  DisplayMemberPath="Item2" SelectedValuePath="Item1"/>
+
+                    <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Target Test Step</Label>
+                    <ComboBox x:Name="testItem" Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestItemList}"
+                              DisplayMemberPath="Item1" SelectedValuePath="Item2"/>
 
                     <Button x:Name="AddTestMapping" Click="Add_TestMapping" Grid.Row="0" Grid.Column="5" Style="{StaticResource buttonStyle}">Add</Button>
                     <Button x:Name="DeleteTestMapping" Click="Delete_TestMapping" Grid.Row="1" Grid.Column="5" Style="{StaticResource buttonStyle}">Delete</Button>
                     <GridSplitter Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Height="3" Background="Red" VerticalAlignment="Stretch"></GridSplitter>
-                    <DataGrid x:Name="testMapping" Grid.Row="3" Grid.ColumnSpan="6" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
+                    <DataGrid x:Name="testMapping" Grid.Row="5" Grid.ColumnSpan="6" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
                   AutoGenerateColumns="False" IsReadOnly="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Rule Index" Width="1*" Binding="{Binding Serial}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
                             <DataGridTextColumn Header="Match Rule" Width="2*" Binding="{Binding MatchRule}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
                             <DataGridTextColumn Header="Keyword" Width="2*" Binding="{Binding Keyword}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
-                            <DataGridTextColumn Header="Target Test Step" Width="4*" Binding="{Binding TestStep_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                            <DataGridTextColumn Header="Target Test Step" Width="3*" Binding="{Binding TestStep_DispName}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
+                            <DataGridTextColumn Header="Target Test Item" Width="3*" Binding="{Binding TestItem}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>
                         </DataGrid.Columns>
 
                     </DataGrid>
@@ -97,7 +112,7 @@
                     <TextBox x:Name="excelColumn" Grid.Row="1" Grid.Column="1" Text="A" Style="{StaticResource textStyle}"></TextBox>
                     <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Test Step</Label>
 
-                    <ComboBox x:Name="testStep" Grid.Row="0" Grid.Column="3" ItemsSource="{Binding TestStepList}" 
+                    <ComboBox x:Name="testStep2" Grid.Row="0" Grid.Column="3" ItemsSource="{Binding TestStepList}" 
                   SelectionChanged="TestStepChanged" Style="{StaticResource comboStyle}"
                   DisplayMemberPath="Item2" SelectedValuePath="Item1"
                   />
@@ -161,7 +176,7 @@
             </Grid.ColumnDefinitions>
             <Button Grid.Column="0" Content="Load" Style="{StaticResource buttonStyle}" Click="Load_MappingRules"></Button>
             <Button Grid.Column="1" Content="Save" Style="{StaticResource buttonStyle}" Click="Save_MappingRules"></Button>
-            <Button Grid.Column="2" Content="Generate TAP TestPlan" Style="{StaticResource buttonStyle}"></Button>
+            <Button Grid.Column="2" Content="Generate TAP TestPlan" Style="{StaticResource buttonStyle}" Click="Button_Click"></Button>
         </Grid>
 
     </Grid>

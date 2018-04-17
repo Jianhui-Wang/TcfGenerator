@@ -21,9 +21,10 @@ namespace ParseTapStepDll
         static string xmlFile = ConfigurationManager.AppSettings["XmlFile"];
 
         static List<Type> customTypes = new List<Type>();
+        static List<Tuple<string, TestItem_Enum>> testItems = new List<Tuple<string, TestItem_Enum>>();
         static Dictionary<string, List<string>> stringAvailValues = new Dictionary<string, List<string>>();
         static Dictionary<string, List<string>> enumDefinitions = new Dictionary<string, List<string>>();
-        static Dictionary<string, Tuple<string,List<Tuple<string, string, string>>>> stepDefinitions = 
+        static Dictionary<string, Tuple<string, List<Tuple<string, string, string>>>> stepDefinitions =
             new Dictionary<string, Tuple<string, List<Tuple<string, string, string>>>>();
 
         static IEnumerable<Type> GetAllTypes(string dllName, Type baseType)
@@ -49,7 +50,7 @@ namespace ParseTapStepDll
                 Type[] types = plugin.GetTypes();
                 foreach (var type in types)
                 {
-                    if (type.IsClass && !type.IsAbstract && type.IsSubclassOf(baseType) 
+                    if (type.IsClass && !type.IsAbstract && type.IsSubclassOf(baseType)
                         && type.IsDefined(typeof(TcfVisibleAttribute)))
                     {
                         yield return type;
@@ -66,7 +67,7 @@ namespace ParseTapStepDll
             return INIAccess.IniReadAllSection(filename);
         }
 
-        static void CreateNodeTree<T>(XmlDocument xmldoc, XmlElement parent, Dictionary<string, Tuple<string,List<T>>> dic, 
+        static void CreateNodeTree<T>(XmlDocument xmldoc, XmlElement parent, Dictionary<string, Tuple<string, List<T>>> dic,
             string child_name, string child_value)
         {
             foreach (var avail in dic)
@@ -82,7 +83,7 @@ namespace ParseTapStepDll
                     {
                         e2.InnerText = value as string;
                     }
-                    else if (typeof(T) == typeof(Tuple<string,string,string>))
+                    else if (typeof(T) == typeof(Tuple<string, string, string>))
                     {
                         var n = (value as Tuple<string, string, string>).Item1;
                         var d = (value as Tuple<string, string, string>).Item2;
@@ -92,7 +93,7 @@ namespace ParseTapStepDll
                         e2.SetAttribute("DisplayName", d);
                         if (enumDefinitions.ContainsKey(t))
                         {
-                            e2.SetAttribute("Type", t.Replace(@"Keysight.S8901A.Common","Enumeration"));
+                            e2.SetAttribute("Type", t.Replace(@"Keysight.S8901A.Common", "Enumeration"));
                             foreach (var v in enumDefinitions[t])
                             {
                                 XmlElement e3 = xmldoc.CreateElement("Enum-Value");
@@ -132,7 +133,7 @@ namespace ParseTapStepDll
                 foreach (var a in GetAllTypes(dllName, typeof(TestStep)))
                 {
                     string DisplayName = a.Name;
-                    List<Tuple<string,string,string>> props = new List<Tuple<string,string,string>>();
+                    List<Tuple<string, string, string>> props = new List<Tuple<string, string, string>>();
                     foreach (var p in a.GetProperties())
                     {
                         if (p.IsDefined(typeof(TcfVisibleAttribute)))
@@ -165,7 +166,7 @@ namespace ParseTapStepDll
                         var att = a.GetCustomAttribute(typeof(DisplayAttribute)) as DisplayAttribute;
                         DisplayName = att.Name;
                     }
-                    Tuple<string, List<Tuple<string, string, string>>> t = 
+                    Tuple<string, List<Tuple<string, string, string>>> t =
                         new Tuple<string, List<Tuple<string, string, string>>>(DisplayName, props);
                     stepDefinitions.Add(a.Name, t);
                 }
@@ -189,6 +190,12 @@ namespace ParseTapStepDll
                     }
                     enumDefinitions.Add(c.ToString(), values);
                 }
+
+                for (int i = 0; i < Enum.GetNames(typeof(TestItem_Enum)).Count(); i++)
+                {
+                    testItems.Add(new Tuple<string, TestItem_Enum>(Enum.GetNames(typeof(TestItem_Enum))[i],
+                                 ((TestItem_Enum[])(Enum.GetValues(typeof(TestItem_Enum))))[i]));
+                }
             }
 
             #region Write XML
@@ -196,10 +203,22 @@ namespace ParseTapStepDll
             XmlNode docNode = myXml.CreateXmlDeclaration("1.0", "UTF-8", null);
 
             myXml.AppendChild(docNode);
-            XmlElement rootElem = myXml.CreateElement("TestSteps");
+            XmlElement rootElem = myXml.CreateElement("Root");
             myXml.AppendChild(rootElem);
 
-            CreateNodeTree(myXml, rootElem, stepDefinitions, "TestStep", "Property");
+            XmlElement teststepsElem = myXml.CreateElement("TestSteps");
+            rootElem.AppendChild(teststepsElem);
+            CreateNodeTree(myXml, teststepsElem, stepDefinitions, "TestStep", "Property");
+
+            XmlElement testItemsElem = myXml.CreateElement("TestItems");
+            rootElem.AppendChild(testItemsElem);
+            for (int i = 0; i < testItems.Count(); i++)
+            {
+                XmlElement item = myXml.CreateElement("Item");
+                item.SetAttribute("Name", testItems[i].Item1);
+                item.SetAttribute("Value", Convert.ToInt16(testItems[i].Item2).ToString());
+                testItemsElem.AppendChild(item);
+            }
 
             myXml.Save(xmlFile);
             #endregion
