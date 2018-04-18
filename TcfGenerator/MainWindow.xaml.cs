@@ -37,6 +37,7 @@ namespace TcfGenerator
         private int teststep_idx; /* Selected item index of the teststep ComboBox */
         private int testmapping_rule_idx; /* the top cursor of the TestMappings array */
         private int settingmapping_rule_idx; /* the top cursor of the SettingMappings array */
+        private List<string> technologies = new List<string>();
 
         public MainWindow()
         {
@@ -81,6 +82,38 @@ namespace TcfGenerator
                 int v = Convert.ToInt16((testitem as XmlNode).Attributes["Value"].Value);
                 TestItemList.Add(new Tuple<string, int>(n, v));
             }
+
+            #region Create Technology List
+            XmlNode selectTechnology = null;
+            XmlNode technology = null;
+            foreach (var ts in Node_TestSteps.ChildNodes)
+            {
+                if (((XmlNode)ts).Attributes["Name"].Value == "SelectTechnology")
+                {
+                    selectTechnology = ts as XmlNode;
+                    break;
+                }
+            }
+            if (selectTechnology != null)
+            {
+                foreach (var prop in selectTechnology.ChildNodes)
+                {
+                    if (((XmlNode)prop).Attributes["Name"].Value == "technology")
+                    {
+                        technology = prop as XmlNode;
+                        break;
+                    }
+                }
+
+            }
+            if (technology != null)
+            {
+                foreach (var value in technology.ChildNodes)
+                {
+                    technologies.Add(((XmlNode)value).InnerText);
+                }
+            }
+            #endregion
         }
 
         private void TestStepChanged(object sender, SelectionChangedEventArgs e)
@@ -244,7 +277,7 @@ namespace TcfGenerator
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ExcelParser ep = new ExcelParser();
-            ep.ParseExcel();
+            ep.ParseExcel(technologies);
         }
     }
 

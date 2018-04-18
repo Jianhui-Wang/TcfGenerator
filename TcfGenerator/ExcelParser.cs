@@ -8,6 +8,7 @@ using Excel = Microsoft.Office.Interop.Excel;
 using Keysight.S8901A.Common;
 using Keysight.S8901A.Measurement.TapSteps;
 using Keysight.Tap;
+using Keysight.Tap.Plugins.BasicSteps;
 using System.Reflection;
 
 namespace TcfGenerator
@@ -66,19 +67,30 @@ namespace TcfGenerator
         }
 
 
-        public void ParseExcel()
+        public void ParseExcel(List<string> s)
         {
             var plugin = Assembly.LoadFrom(@"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\ParseTapStepDll\Keysight.S8901A.Measurement.TapSteps.dll");
 
             TestPlan tp = new TestPlan();
+            tp.Locked = false;
 
-            string v = "SelectTechnology";
             Type t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.SelectTechnology");
-            TestStep ts = (TestStep)Activator.CreateInstance(t);
+            ITestStep ts = (ITestStep)Activator.CreateInstance(t, args:s);
             tp.Steps.Add(ts);
+
+            t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.Source_Analyzer_Setup");
+            ts = (ITestStep)Activator.CreateInstance(t);
+            tp.Steps.Add(ts);
+            //ts = new SelectTechnology(s);
+            //tp.Steps.Add(ts);
+
+            ts = new DelayStep();
+            tp.Steps.Add(ts);
+
+            tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
         }
 
-        public void ParseExcel2()
+        public void ParseExcel2(List<string> technologies)
         {
             Excel.Application xlApp;
             Excel.Workbook xlWorkBook;
@@ -108,7 +120,15 @@ namespace TcfGenerator
                 {
                     string v = ReadData(xlWorkSheet, r.ExcelColumn, row);
                     Type t = Type.GetType("Keysight.S8901A.Measurement.TapSteps." + r.TestStep);
-                    TestStep ts = (TestStep)Activator.CreateInstance(t);
+                    ITestStep ts;
+                    if (t == typeof(SelectTechnology))
+                    {
+                        ts = (ITestStep)Activator.CreateInstance(t, technologies.ToArray());
+                    }
+                    else
+                    {
+                        ts = (ITestStep)Activator.CreateInstance(t);
+                    }
                     tp.Steps.Add(ts);
                 }
             }
