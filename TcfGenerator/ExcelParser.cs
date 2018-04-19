@@ -30,7 +30,11 @@ namespace TcfGenerator
                 return r.Value2.ToString();
         }
 
-        public ExcelParser() { }
+        public ExcelParser()
+        {
+            excelFile = @"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\TcfGenerator\test.xlsx";
+            sheetName = @"TEST SPECIFICATION & CONDITIONS";
+        }
         public ExcelParser(string filename, MappingRules mr)
         {
             this.mr = mr;
@@ -67,30 +71,26 @@ namespace TcfGenerator
         }
 
 
-        public void ParseExcel(List<string> s)
-        {
-            var plugin = Assembly.LoadFrom(@"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\ParseTapStepDll\Keysight.S8901A.Measurement.TapSteps.dll");
+        //public void ParseExcel(List<string> s)
+        //{
+        //    SessionLogs.Load(Directory.GetCurrentDirectory() + "\\Session_log.txt");
 
-            TestPlan tp = new TestPlan();
-            tp.Locked = false;
+        //    var plugin = Assembly.LoadFrom(@"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\ParseTapStepDll\Keysight.S8901A.Measurement.TapSteps.dll");
 
-            Type t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.SelectTechnology");
-            ITestStep ts = (ITestStep)Activator.CreateInstance(t, args:s);
-            tp.Steps.Add(ts);
+        //    TestPlan tp = new TestPlan();
 
-            t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.Source_Analyzer_Setup");
-            ts = (ITestStep)Activator.CreateInstance(t);
-            tp.Steps.Add(ts);
-            //ts = new SelectTechnology(s);
-            //tp.Steps.Add(ts);
+        //    Type t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.SelectTechnology");
+        //    ITestStep ts = (ITestStep)Activator.CreateInstance(t, args:s);
+        //    tp.Steps.Add(ts);
 
-            ts = new DelayStep();
-            tp.Steps.Add(ts);
+        //    t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.Source_Analyzer_Setup");
+        //    ts = (ITestStep)Activator.CreateInstance(t);
+        //    tp.Steps.Add(ts);
 
-            tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
-        }
+        //    tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
+        //}
 
-        public void ParseExcel2(List<string> technologies)
+        public void ParseExcel(List<string> technologies)
         {
             Excel.Application xlApp;
             Excel.Workbook xlWorkBook;
@@ -100,6 +100,8 @@ namespace TcfGenerator
             xlWorkBook = xlApp.Workbooks.Open(excelFile);
             xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.Item[sheetName];
             string testName_Column = "A"; // TODO: testName Column need to be inclued in MappingRules
+
+            TestPlan tp = new TestPlan();
 
             for (int i = rowStart; i <= rowEnd; i++)
             {
@@ -114,8 +116,6 @@ namespace TcfGenerator
 
                 Console.WriteLine("Row[{3}] Test[{0}] => TapStep [{1}], TestItem [{2}]", tn, tapStep, tapTestItem, row);
 
-                TestPlan tp = new TestPlan();
-
                 foreach (var r in mr.settingMappings)
                 {
                     string v = ReadData(xlWorkSheet, r.ExcelColumn, row);
@@ -123,7 +123,7 @@ namespace TcfGenerator
                     ITestStep ts;
                     if (t == typeof(SelectTechnology))
                     {
-                        ts = (ITestStep)Activator.CreateInstance(t, technologies.ToArray());
+                        ts = (ITestStep)Activator.CreateInstance(t, args:technologies);
                     }
                     else
                     {
@@ -133,6 +133,7 @@ namespace TcfGenerator
                 }
             }
 
+            tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
         }
     }
 }

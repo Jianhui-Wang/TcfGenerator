@@ -6,7 +6,7 @@
         <Setter Property="Margin" Value="10,1,1,1" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="FontWeight" Value="Bold"/>
+        <Setter Property="FontWeight" Value="Normal"/>
     </Style>
 
     <Style x:Key="textStyle" TargetType="{x:Type TextBox}">
