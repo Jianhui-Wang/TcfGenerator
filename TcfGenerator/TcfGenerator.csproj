@@ -69,7 +69,7 @@
       <HintPath>..\Reference\Microsoft.Office.Interop.Excel.dll</HintPath>
     </Reference>
     <Reference Include="netstandard">
-      <HintPath>..\ParseTapStepDll\netstandard.dll</HintPath>
+      <HintPath>..\Reference\netstandard.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Collections.Immutable, Version=1.1.37.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
@@ -78,7 +78,7 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.Reflection.Metadata">
-      <HintPath>..\ParseTapStepDll\System.Reflection.Metadata.dll</HintPath>
+      <HintPath>..\Reference\System.Reflection.Metadata.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
