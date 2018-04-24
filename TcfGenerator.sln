@@ -5,8 +5,6 @@ VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcfGenerator", "TcfGenerator\TcfGenerator.csproj", "{D4543059-121A-4565-93EE-7C8240DEB959}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ParseTapStepDll", "ParseTapStepDll\ParseTapStepDll\ParseTapStepDll.csproj", "{584C304D-8C47-4F17-974A-263018348B3D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PropertySelector", "PropertySelector\PropertySelector.csproj", "{F89A41F3-1980-4540-AF7B-5E702F17FF26}"
 EndProject
 Global
@@ -19,10 +17,6 @@ Global
 		{D4543059-121A-4565-93EE-7C8240DEB959}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4543059-121A-4565-93EE-7C8240DEB959}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4543059-121A-4565-93EE-7C8240DEB959}.Release|Any CPU.Build.0 = Release|Any CPU
-		{584C304D-8C47-4F17-974A-263018348B3D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{584C304D-8C47-4F17-974A-263018348B3D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{584C304D-8C47-4F17-974A-263018348B3D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{584C304D-8C47-4F17-974A-263018348B3D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F89A41F3-1980-4540-AF7B-5E702F17FF26}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F89A41F3-1980-4540-AF7B-5E702F17FF26}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F89A41F3-1980-4540-AF7B-5E702F17FF26}.Release|Any CPU.ActiveCfg = Release|Any CPU

@@ -8,7 +8,6 @@ using Excel = Microsoft.Office.Interop.Excel;
 using Keysight.S8901A.Common;
 using Keysight.S8901A.Measurement.TapSteps;
 using Keysight.Tap;
-using Keysight.Tap.Plugins.BasicSteps;
 using System.Reflection;
 
 namespace TcfGenerator

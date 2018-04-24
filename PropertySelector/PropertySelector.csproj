@@ -37,33 +37,40 @@
   <ItemGroup>
     <Reference Include="Keysight.Ccl.Wsl, Version=3.2.21601.10006, Culture=neutral, PublicKeyToken=55333af07c70062e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.Ccl.Wsl.dll</HintPath>
+      <HintPath>..\Reference\Keysight.Ccl.Wsl.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Common.BasePlugins, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.S8901A.Common.BasePlugins.dll</HintPath>
+      <HintPath>..\Reference\Keysight.S8901A.Common.BasePlugins.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Common.KmfPlugins, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.S8901A.Common.KmfPlugins.dll</HintPath>
+      <HintPath>..\Reference\Keysight.S8901A.Common.KmfPlugins.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Measurement.Apis, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.S8901A.Measurement.Apis.dll</HintPath>
+      <HintPath>..\Reference\Keysight.S8901A.Measurement.Apis.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Measurement.CommonTapSteps, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.S8901A.Measurement.CommonTapSteps.dll</HintPath>
+      <HintPath>..\Reference\Keysight.S8901A.Measurement.CommonTapSteps.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Measurement.TapSteps, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\ParseTapStepDll\Keysight.S8901A.Measurement.TapSteps.dll</HintPath>
+      <HintPath>..\Reference\Keysight.S8901A.Measurement.TapSteps.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.Tap.Engine">
-      <HintPath>..\..\..\Program Files\Keysight\TAP8\Keysight.Tap.Engine.dll</HintPath>
+      <HintPath>..\Reference\Keysight.Tap.Engine.dll</HintPath>
+    </Reference>
+    <Reference Include="netstandard">
+      <HintPath>..\Reference\netstandard.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
+    <Reference Include="System.Reflection.Metadata">
+      <HintPath>..\Reference\System.Reflection.Metadata.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -96,6 +103,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ParseTapStepDll.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
