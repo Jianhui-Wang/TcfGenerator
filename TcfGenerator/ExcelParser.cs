@@ -17,8 +17,6 @@ namespace TcfGenerator
         private MappingRules mr { get; set; }
         private string excelFile { get; set; }
         private string sheetName { get; set; }
-        private int rowStart { get; set; }
-        private int rowEnd { get; set; }
 
         private string ReadData(Excel.Worksheet xlWorkSheet, string column, int row)
         {
@@ -29,19 +27,15 @@ namespace TcfGenerator
                 return r.Value2.ToString();
         }
 
-        public ExcelParser()
-        {
-            excelFile = @"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\TcfGenerator\test.xlsx";
-            sheetName = @"TEST SPECIFICATION & CONDITIONS";
-        }
         public ExcelParser(string filename, MappingRules mr)
         {
             this.mr = mr;
             if (mr == null)
                 throw new InvalidDataException("Mapping Rules is null!");
             if (!File.Exists(filename))
-                throw new FileNotFoundException("Excel File "+ filename + " Not Exist!");
+                throw new FileNotFoundException("Excel File " + filename + " Not Exist!");
             excelFile = filename;
+            sheetName = @"Sheet1";
         }
 
         public bool FindMatchingRule(string testname, out string tapStep, out TestItem_Enum tapTestItem)
@@ -69,6 +63,25 @@ namespace TcfGenerator
             return found;
         }
 
+        private Assembly[] plugins =
+        {
+            Assembly.LoadFrom(Directory.GetCurrentDirectory() + @"\..\..\..\Reference\Keysight.S8901A.Measurement.TapSteps.dll"),
+            Assembly.LoadFrom(Directory.GetCurrentDirectory() + @"\..\..\..\Reference\Keysight.S8901A.Measurement.CommonTapSteps.dll")
+        };
+
+        private Type PluginGetType(string typeName)
+        {
+            Type t = null;
+            foreach (var plugin in plugins)
+            {
+                t = plugin.GetType(typeName);
+                if (t != null)
+                {
+                    break;
+                }
+            }
+            return t;
+        }
 
         //public void ParseExcel(List<string> s)
         //{
@@ -89,6 +102,77 @@ namespace TcfGenerator
         //    tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
         //}
 
+        private void SetProperty(Type t, ITestStep ts, string propertyName, string propertyType, string propertyValue)
+        {
+            PropertyInfo pInfo = t.GetProperty(propertyName);
+
+            if (propertyType == "System.Double")
+            {
+                double result;
+                if (Double.TryParse(propertyValue, out result))
+                {
+                    pInfo.SetValue(ts, result, null);
+                }
+            }
+
+        }
+
+        internal class InternalTestStep
+        {
+            internal class InternalProperty
+            {
+                public string name { get; set; }
+                public string type { get; set; }
+                public string value { get; set; }
+            }
+
+            public Type t { get; set; }
+            public ITestStep ts { get; set; }
+            public List<InternalProperty> props { get; set; }
+
+            public InternalTestStep()
+            {
+                t = null;
+                ts = null;
+                props = new List<InternalProperty>();
+            }
+        }
+
+
+        private bool TestStepExist(List<InternalTestStep> its, string testStepName)
+        {
+            bool ret = false;
+            foreach (var ts in its)
+            {
+                if (ts.t.Name == testStepName) return true;
+            }
+            return ret;
+        }
+
+        private void CombineTestSteps(List<Tuple<Type, ITestStep, string, string, string>> tss, Tuple<Type, ITestStep> measTestStep)
+        {
+            Tuple<Type, ITestStep> mt = measTestStep;
+            List<InternalTestStep> its = new List<InternalTestStep>();
+
+            foreach (var i in tss)
+            {
+                if (!TestStepExist(its, i.Item1.Name))
+                {
+                    InternalTestStep it = new InternalTestStep();
+                    it.t = i.Item1;
+                    it.ts = i.Item2;
+                    InternalTestStep.InternalProperty p =
+                        new InternalTestStep.InternalProperty() { name = i.Item3, type = i.Item4, value = i.Item5 };
+                    it.props.Add(p);
+                }
+                else
+                {
+
+                }
+            }
+        }
+
+
         public void ParseExcel(List<string> technologies)
         {
             Excel.Application xlApp;
@@ -98,7 +182,19 @@ namespace TcfGenerator
             xlApp = new Excel.Application();
             xlWorkBook = xlApp.Workbooks.Open(excelFile);
             xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.Item[sheetName];
-            string testName_Column = "A"; // TODO: testName Column need to be inclued in MappingRules
+            var testName_Column = mr.testNameColumn; // TODO: testName Column need to be inclued in MappingRules
+            int rowStart, rowEnd;
+            bool result;
+
+            if (!(result = Int32.TryParse(mr.rowStart, out rowStart)))
+            {
+                throw new InvalidCastException("rowStart is not an integer!");
+            }
+
+            if (!(result = Int32.TryParse(mr.rowEnd, out rowEnd)))
+            {
+                throw new InvalidCastException("rowEnd is not an integer!");
+            }
 
             TestPlan tp = new TestPlan();
 
@@ -113,26 +209,36 @@ namespace TcfGenerator
 
                 if (!find) continue;
 
-                Console.WriteLine("Row[{3}] Test[{0}] => TapStep [{1}], TestItem [{2}]", tn, tapStep, tapTestItem, row);
+                List<Tuple<Type, ITestStep, string, string, string>> tss = new List<Tuple<Type, ITestStep, string, string, string>>();
 
                 foreach (var r in mr.settingMappings)
                 {
                     string v = ReadData(xlWorkSheet, r.ExcelColumn, row);
-                    Type t = Type.GetType("Keysight.S8901A.Measurement.TapSteps." + r.TestStep);
+                    Type t = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + r.TestStep);
                     ITestStep ts;
                     if (t == typeof(SelectTechnology))
                     {
-                        ts = (ITestStep)Activator.CreateInstance(t, args:technologies);
+                        ts = (ITestStep)Activator.CreateInstance(t, args: technologies);
                     }
                     else
                     {
                         ts = (ITestStep)Activator.CreateInstance(t);
                     }
-                    tp.Steps.Add(ts);
+
+                    tss.Add(new Tuple<Type, ITestStep, string, string, string>(t, ts, r.Property, r.PropertyType, v));
+                }
+
+                Type tMeas = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + tapStep);
+                var tsMeas = (ITestStep)Activator.CreateInstance(tMeas);
+
+                CombineTestSteps(tss, new Tuple<Type, ITestStep>(tMeas, tsMeas));
+
+                foreach (var ts in tss)
+                {
                 }
             }
 
-            tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
+            tp.Save(@"c:\temp\1.tapplan");
         }
     }
 }

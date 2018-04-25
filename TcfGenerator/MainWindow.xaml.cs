@@ -18,6 +18,7 @@ using System.Windows.Shapes;
 using System.Xml;
 using System.Xml.Serialization;
 using Keysight.S8901A.Common;
+using System.ComponentModel;
 
 namespace TcfGenerator
 {
@@ -25,10 +26,10 @@ namespace TcfGenerator
     {
         #region Object bind with UI
         public ObservableCollection<TestMapping> TestMappings { get; set; }
-        public ObservableCollection<SettingMapping> SettingMappings { get; set; }
-        public ObservableCollection<Tuple<string /*Name*/,string /*DisplayName*/>> TestStepList { get; set; }
-        public ObservableCollection<Tuple<string /*Name*/, string /*DisplayName*/,string /*Type*/>> PropList { get; set; }
-        public ObservableCollection<Tuple<string /*EnumValueName*/,int /*EnumValue*/>> TestItemList { get; set; }
+        public ObservableCollection<SettingMapping> mrsettingMappings { get; set; }
+        public ObservableCollection<Tuple<string /*Name*/, string /*DisplayName*/>> TestStepList { get; set; }
+        public ObservableCollection<Tuple<string /*Name*/, string /*DisplayName*/, string /*Type*/>> PropList { get; set; }
+        public ObservableCollection<Tuple<string /*EnumValueName*/, int /*EnumValue*/>> TestItemList { get; set; }
         #endregion
 
         private ObservableCollection<ValueMapping> ValueMappings { get; set; }
@@ -38,27 +39,68 @@ namespace TcfGenerator
         private int testmapping_rule_idx; /* the top cursor of the TestMappings array */
         private int settingmapping_rule_idx; /* the top cursor of the SettingMappings array */
         private List<string> technologies = new List<string>();
+        public MappingRules mr;
 
         public MainWindow()
         {
             InitializeComponent();
 
-            TestStepList = new ObservableCollection<Tuple<string,string>>();
-            PropList = new ObservableCollection<Tuple<string,string,string>>();
-            SettingMappings = new ObservableCollection<SettingMapping>();
-            TestMappings = new ObservableCollection<TestMapping>();
-            TestItemList = new ObservableCollection<Tuple<string,int>>();
+            mr = new MappingRules();
+
+            TestStepList = new ObservableCollection<Tuple<string, string>>();
+            PropList = new ObservableCollection<Tuple<string, string, string>>();
+            TestItemList = new ObservableCollection<Tuple<string, int>>();
             settingmapping_rule_idx = 0;
             testmapping_rule_idx = 0;
 
             InitializeTestList(@"c:\temp\test.xml");
 
-            settingMapping.DataContext = SettingMappings;
-            testMapping.DataContext = TestMappings;
+            settingMapping.DataContext = mr.settingMappings;
+            testMapping.DataContext = mr.testMappings;
             testItem.DataContext = this;
             testStep1.DataContext = this;
             testStep2.DataContext = this;
             Property.DataContext = this;
+            excelTestColumn.DataContext = mr;
+            excelStartRow.DataContext = mr;
+            excelEndRow.DataContext = mr;
+        }
+
+        private List<string> fetchList(string testName, string propertyName)
+        {
+            List<string> retValue = new List<string>();
+            XmlNode testStep = null;
+            XmlNode property = null;
+
+            foreach (var ts in Node_TestSteps.ChildNodes)
+            {
+                if (((XmlNode)ts).Attributes["Name"].Value == testName)
+                {
+                    testStep = ts as XmlNode;
+                    break;
+                }
+            }
+            if (testStep != null)
+            {
+                foreach (var prop in testStep.ChildNodes)
+                {
+                    if (((XmlNode)prop).Attributes["Name"].Value == propertyName)
+                    {
+                        property = prop as XmlNode;
+                        break;
+                    }
+                }
+
+            }
+            if (property != null)
+            {
+                foreach (var value in property.ChildNodes)
+                {
+                    retValue.Add(((XmlNode)value).InnerText);
+                }
+            }
+
+            return retValue;
         }
 
         private void InitializeTestList(string xmlFile)
@@ -73,7 +115,7 @@ namespace TcfGenerator
             {
                 string n = (teststep as XmlNode).Attributes["Name"].Value;
                 string d = (teststep as XmlNode).Attributes["DisplayName"].Value;
-                TestStepList.Add(new Tuple<string, string>(n,d));
+                TestStepList.Add(new Tuple<string, string>(n, d));
             }
 
             foreach (var testitem in Node_TestItems.ChildNodes)
@@ -83,37 +125,7 @@ namespace TcfGenerator
                 TestItemList.Add(new Tuple<string, int>(n, v));
             }
 
-            #region Create Technology List
-            XmlNode selectTechnology = null;
-            XmlNode technology = null;
-            foreach (var ts in Node_TestSteps.ChildNodes)
-            {
-                if (((XmlNode)ts).Attributes["Name"].Value == "SelectTechnology")
-                {
-                    selectTechnology = ts as XmlNode;
-                    break;
-                }
-            }
-            if (selectTechnology != null)
-            {
-                foreach (var prop in selectTechnology.ChildNodes)
-                {
-                    if (((XmlNode)prop).Attributes["Name"].Value == "technology")
-                    {
-                        technology = prop as XmlNode;
-                        break;
-                    }
-                }
-
-            }
-            if (technology != null)
-            {
-                foreach (var value in technology.ChildNodes)
-                {
-                    technologies.Add(((XmlNode)value).InnerText);
-                }
-            }
-            #endregion
+            technologies = fetchList("SelectTechnology", "technology");
         }
 
         private void TestStepChanged(object sender, SelectionChangedEventArgs e)
@@ -121,7 +133,7 @@ namespace TcfGenerator
             teststep_idx = (sender as ComboBox).SelectedIndex;
             if (teststep_idx == -1)
                 teststep_idx = 0;
-                
+
             var teststep = Node_TestSteps.ChildNodes[teststep_idx];
 
             PropList.Clear();
@@ -131,14 +143,14 @@ namespace TcfGenerator
                 string n = (property as XmlNode).Attributes["Name"].Value;
                 string d = (property as XmlNode).Attributes["DisplayName"].Value;
                 string t = (property as XmlNode).Attributes["Type"].Value;
-                PropList.Add(new Tuple<string,string,string>(n,d,t));
+                PropList.Add(new Tuple<string, string, string>(n, d, t));
             }
         }
 
         private void Add_SettingMapping(object sender, RoutedEventArgs e)
         {
             SettingMapping m = new SettingMapping();
-            int teststep_idx = testStep1.SelectedIndex;
+            int teststep_idx = testStep2.SelectedIndex;
             int property_idx = Property.SelectedIndex;
 
             if (teststep_idx != -1 && property_idx != -1)
@@ -146,12 +158,12 @@ namespace TcfGenerator
                 m.Serial = ++settingmapping_rule_idx;
                 m.ExcelColumn = excelColumn.Text;
                 m.TestStep = TestStepList[teststep_idx].Item1;
-                m.TestStep_DispName = TestStepList[teststep_idx].Item2 ;
+                m.TestStep_DispName = TestStepList[teststep_idx].Item2;
                 m.Property = PropList[property_idx].Item1;
                 m.Property_DispName = PropList[property_idx].Item2;
                 m.PropertyType = PropList[property_idx].Item3;
                 m.ValMapping = ValueMappings;
-                SettingMappings.Add(m);
+                mr.settingMappings.Add(m);
 
                 settingMapping.Items.Refresh();
             }
@@ -161,11 +173,11 @@ namespace TcfGenerator
         {
             int index = settingMapping.SelectedIndex;
             if (index == -1) return;
-            SettingMappings.RemoveAt(index);
+            mr.settingMappings.RemoveAt(index);
             settingmapping_rule_idx--;
-            for (int i = index; i<SettingMappings.Count; i++)
+            for (int i = index; i < mr.settingMappings.Count; i++)
             {
-                SettingMappings[i].Serial = i + 1;
+                mr.settingMappings[i].Serial = i + 1;
             }
             settingMapping.Items.Refresh();
         }
@@ -204,7 +216,6 @@ namespace TcfGenerator
 
         private void Save_MappingRules(object sender, RoutedEventArgs e)
         {
-            MappingRules mr = new MappingRules(TestMappings, SettingMappings);
             XmlSerializer serializer = new XmlSerializer(typeof(MappingRules));
             SaveFileDialog dialog = new SaveFileDialog();
             string filename = "";
@@ -232,12 +243,12 @@ namespace TcfGenerator
                 object o = serializer.Deserialize(xmlStream);
                 var t = o as MappingRules;
                 xmlStream.Close();
-                TestMappings = t.testMappings;
-                SettingMappings = t.settingMappings;
-                testMapping.DataContext = TestMappings;
-                testmapping_rule_idx = TestMappings.Count;
-                settingMapping.DataContext = SettingMappings; 
-                settingmapping_rule_idx = SettingMappings.Count;
+                mr.testMappings = t.testMappings;
+                mr.settingMappings = t.settingMappings;
+                testMapping.DataContext = mr.testMappings;
+                testmapping_rule_idx = mr.testMappings.Count;
+                settingMapping.DataContext = mr.settingMappings;
+                settingmapping_rule_idx = mrsettingMappings.Count;
             }
         }
 
@@ -254,7 +265,7 @@ namespace TcfGenerator
                 m.MatchRule = testMappingRule.SelectedValue.ToString().Split(':')[1];
                 m.Keyword = keyword.Text;
                 m.TestItem = (TestItem_Enum)(testItem.SelectedValue);
-                TestMappings.Add(m);
+                mr.testMappings.Add(m);
 
                 testMapping.Items.Refresh();
             }
@@ -265,18 +276,18 @@ namespace TcfGenerator
         {
             int index = testMapping.SelectedIndex;
             if (index == -1) return;
-            TestMappings.RemoveAt(index);
+            mr.testMappings.RemoveAt(index);
             testmapping_rule_idx--;
-            for (int i = index; i < TestMappings.Count; i++)
+            for (int i = index; i < mr.testMappings.Count; i++)
             {
-                TestMappings[i].Serial = i + 1;
+                mr.testMappings[i].Serial = i + 1;
             }
             testMapping.Items.Refresh();
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ExcelParser ep = new ExcelParser();
+            ExcelParser ep = new ExcelParser(@"c:\Temp\test.xlsx", mr);
             ep.ParseExcel(technologies);
         }
     }
@@ -289,7 +300,7 @@ namespace TcfGenerator
         public string TestStep { get; set; }
         public string TestStep_DispName { get; set; }
         public string Property { get; set; }
-        public string Property_DispName{ get; set; }
+        public string Property_DispName { get; set; }
         public string PropertyType { get; set; }
         public ObservableCollection<ValueMapping> ValMapping { get; set; }
     }
@@ -306,10 +317,53 @@ namespace TcfGenerator
     }
 
     [Serializable]
-    public class MappingRules
+    public class MappingRules : INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler PropertyChanged;
+        protected void OnPropertyChanged(string name)
+        {
+            if (PropertyChanged != null)
+            {
+                PropertyChanged.Invoke(this, new PropertyChangedEventArgs(name));
+            }
+        }
+
         public ObservableCollection<TestMapping> testMappings { get; set; }
         public ObservableCollection<SettingMapping> settingMappings { get; set; }
+
+        private string _rowStart;
+        public string rowStart
+        {
+            get { return _rowStart; }
+            set
+            {
+                _rowStart = value;
+                OnPropertyChanged("rowStart");
+            }
+        }
+
+        private string _rowEnd;
+        public string rowEnd
+        {
+            get { return _rowEnd; }
+            set
+            {
+                _rowEnd = value;
+                OnPropertyChanged(rowEnd);
+            }
+        }
+
+        private string _testNameColumn;
+        public string testNameColumn
+        {
+            get { return _testNameColumn; }
+            set
+            {
+                _testNameColumn = value;
+                OnPropertyChanged("testNameColumn");
+            }
+        }
+
         public MappingRules()
         {
             testMappings = new ObservableCollection<TestMapping>();
