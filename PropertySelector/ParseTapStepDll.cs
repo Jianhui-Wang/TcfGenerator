@@ -110,7 +110,7 @@ namespace PropertySelector
         static string[] TapStepsDlls = ConfigurationManager.AppSettings["TapStepsPlugin"].Split(',');
         static string BasePlugin = ConfigurationManager.AppSettings["BasePlugin"];
         static string IniFile = ConfigurationManager.AppSettings["IniConfig"];
-        static string xmlFile = ConfigurationManager.AppSettings["XmlFile"];
+        static string SwitchConfigFile = ConfigurationManager.AppSettings["SwitchConfig"];
 
         static ObservableCollection<TapTestStep> testSteps = new ObservableCollection<TapTestStep>();
         static HashSet<Type> keysightTypes = new HashSet<Type>();
@@ -155,6 +155,16 @@ namespace PropertySelector
             if (!File.Exists(filename)) throw new FileNotFoundException();
             return INIAccess.IniReadAllSection(filename);
         }
+        static List<string> ReadSwitchPaths(string filename)
+        {
+            List<string> returnValue = new List<string>();
+            SwitchMatrix sw = new SwitchMatrix(SwitchConfigFile);
+            foreach (var path in sw.paths)
+            {
+                returnValue.Add(path.desc);
+            }
+            return returnValue;
+        }
 
         static void CreateNodeTree(XmlDocument xmldoc, XmlElement parent, List<TapTestStep> testSteps,
             string child_name, string child_value)
@@ -169,13 +179,16 @@ namespace PropertySelector
                 {
                     var t = p.Type.ToString();
                     XmlElement e2 = xmldoc.CreateElement(child_value);
+
+                    e2.SetAttribute("Name", p.Name);
+                    e2.SetAttribute("DisplayName", p.DisplayName);
+
                     if (p.Type.IsEnum)
                     {
-                        e2.SetAttribute("Name", p.Name);
-                        e2.SetAttribute("DisplayName", p.DisplayName);
                         if (enumDefinitions.ContainsKey(p.Type.ToString()))
                         {
-                            e2.SetAttribute("Type", t.Replace(@"Keysight.S8901A.Common", "Enumeration"));
+                            string[] temp = t.Split('.');
+                            e2.SetAttribute("Type", "Enumeration." + temp[temp.Length - 1]);
                             foreach (var v in enumDefinitions[t])
                             {
                                 XmlElement e3 = xmldoc.CreateElement("Enum-Value");
@@ -183,31 +196,21 @@ namespace PropertySelector
                                 e2.AppendChild(e3);
                             }
                         }
-                        else if (p.Type.Equals(typeof(string)) && p.AvailableValues.Count > 0)
-                        {
-                            e2.SetAttribute("Type", t);
-                            e2.SetAttribute("AvailValues", "True");
-                            foreach (var v in p.AvailableValues)
-                            {
-                                XmlElement e3 = xmldoc.CreateElement("Value");
-                                e3.InnerText = v as string;
-                                e2.AppendChild(e3);
-                            }
-                        }
-                        else
-                        {
-                            e2.SetAttribute("Type", t);
-                        }
-
                     }
-                    else if (p.Type == typeof(string) || 
-                             p.Type == typeof(double) || 
-                             p.Type == typeof(int)    ||
-                             p.Type == typeof(bool))
+                    else if (p.Type.Equals(typeof(string)) && p.AvailableValues.Count > 0)
                     {
-                        e2.SetAttribute("Name", p.Name);
-                        e2.SetAttribute("DisplayName", p.DisplayName);
-                        e2.SetAttribute("Type", p.Type.ToString());
+                        e2.SetAttribute("Type", t);
+                        e2.SetAttribute("AvailValues", "True");
+                        foreach (var v in p.AvailableValues)
+                        {
+                            XmlElement e3 = xmldoc.CreateElement("Value");
+                            e3.InnerText = v as string;
+                            e2.AppendChild(e3);
+                        }
+                    }
+                    else
+                    {
+                        e2.SetAttribute("Type", t);
                     }
 
                     e.AppendChild(e2);
@@ -239,10 +242,10 @@ namespace PropertySelector
                     ts.Settings = settings;
 
                     foreach (var p in (a.GetProperties().
-                        Where(x => x.Module.ToString() == TapStepsDlls[i] && 
+                        Where(x => x.Module.ToString() == TapStepsDlls[i] &&
                                    x.Name != "pa_instrument" &&
                                    (
-                                    (!x.IsDefined(typeof(BrowsableAttribute))) 
+                                    (!x.IsDefined(typeof(BrowsableAttribute)))
                                     ||
                                     (x.IsDefined(typeof(BrowsableAttribute)) &&
                                     (x.GetCustomAttribute(typeof(BrowsableAttribute)) as BrowsableAttribute).Browsable == true)
@@ -272,7 +275,45 @@ namespace PropertySelector
                         if (p.PropertyType.Equals(typeof(string))
                             && p.IsDefined(typeof(AvailableValuesAttribute)))
                         {
-                            setting.AvailableValues.AddRange(ReadTechnologies(IniFile));
+                            // SelectTechnology.technology
+                            if (ts.Name == "SelectTechnology" && p.Name == "technology")
+                            {
+                                setting.AvailableValues.AddRange(ReadTechnologies(IniFile));
+                            }
+
+                            // SelectTechnology.awg_waveform
+                            else if (ts.Name == "SelectTechnology" && p.Name == "awg_waveform")
+                            {
+                                //TODO: add this
+                            }
+
+                            // Switch_Setup.switch_path
+                            else if (ts.Name == "Switch_Setup" && p.Name == "switch_path")
+                            {
+                                setting.AvailableValues.AddRange(ReadSwitchPaths(SwitchConfigFile));
+                            }
+
+                            // PPMU_Measurement.ppmu_chan_name
+                            else if (ts.Name == "PPMU_Measurement" && p.Name == "ppmu_chan_name")
+                            {
+                                //TODO: add this
+                            }
+
+                            else if (ts.Name == "PA_NFColdSourceMeasurement" && p.Name == "freqmode")
+                            {
+                                //TODO: add this
+                            }
+
+                            else if (ts.Name == "PA_NFYFactorMeasurement" && p.Name == "freqmode")
+                            {
+                                //TODO: add this
+                            }
+
+                            else
+                            {
+                                throw new Exception("AvailableValues: Need special handling for Test Step:[" + ts.Name + "], " + "Property:[" + p.Name + "]");
+                            }
+
                         }
 
                         settings.Add(setting);
@@ -293,36 +334,47 @@ namespace PropertySelector
             // all the Enum definitions should be in Base plugin
             var curDir = Directory.GetCurrentDirectory();
             var baseDll = curDir + "\\" + BasePlugin;
-            var plugin = Assembly.LoadFrom(baseDll);
-            if (plugin != null)
+            List<string> dlls = new List<string>();
+            dlls.Add(baseDll);
+            foreach (var a in TapStepsDlls)
             {
-                var types = plugin.GetTypes();
-                foreach (Type c in keysightTypes)
-                {
-                    var t = types.ToList().Find(x => (x == c) && x.IsEnum);
-                    if (t != null)
-                    {
-                        List<string> values = new List<string>();
-
-                        foreach (var ev in c.GetEnumValues())
-                        {
-                            values.Add(ev.ToString());
-                        }
-
-                        if (!enumDefinitions.ContainsKey(c.ToString()))
-                        {
-                            enumDefinitions.Add(c.ToString(), values);
-                        }
-                    }
-                }
-
-                for (int i = 0; i < Enum.GetNames(typeof(TestItem_Enum)).Count(); i++)
-                {
-                    testItems.Add(new Tuple<string, TestItem_Enum>(Enum.GetNames(typeof(TestItem_Enum))[i],
-                                 ((TestItem_Enum[])(Enum.GetValues(typeof(TestItem_Enum))))[i]));
-                }
+                var dll = curDir + "\\" + a;
+                dlls.Add(dll);
             }
 
+
+            foreach (var dll in dlls)
+            {
+                var plugin = Assembly.LoadFrom(dll);
+                if (plugin != null)
+                {
+                    var types = plugin.GetTypes();
+                    foreach (Type c in keysightTypes)
+                    {
+                        var t = types.ToList().Find(x => (x == c) && x.IsEnum);
+                        if (t != null)
+                        {
+                            List<string> values = new List<string>();
+
+                            foreach (var ev in c.GetEnumValues())
+                            {
+                                values.Add(ev.ToString());
+                            }
+
+                            if (!enumDefinitions.ContainsKey(c.ToString()))
+                            {
+                                enumDefinitions.Add(c.ToString(), values);
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < Enum.GetNames(typeof(TestItem_Enum)).Count(); i++)
+                    {
+                        testItems.Add(new Tuple<string, TestItem_Enum>(Enum.GetNames(typeof(TestItem_Enum))[i],
+                                     ((TestItem_Enum[])(Enum.GetValues(typeof(TestItem_Enum))))[i]));
+                    }
+                }
+            }
         }
 
         public static void GenerateXml(string filename, ObservableCollection<TapTestStep> testSteps)
