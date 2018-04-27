@@ -7,11 +7,34 @@ using System.IO;
 using Excel = Microsoft.Office.Interop.Excel;
 using Keysight.S8901A.Common;
 using Keysight.S8901A.Measurement.TapSteps;
+using Keysight.S8901A.Measurement.TapInstruments;
 using Keysight.Tap;
 using System.Reflection;
 
 namespace TcfGenerator
 {
+    internal class InternalTestStep
+    {
+        internal class InternalProperty
+        {
+            public string name { get; set; }
+            public string type { get; set; }
+            public string value { get; set; }
+            public List<ValueMapping> valueMappings { get; set; }
+        }
+
+        public Type t { get; set; }
+        public ITestStep ts { get; set; }
+        public List<InternalProperty> props { get; set; }
+
+        public InternalTestStep()
+        {
+            t = null;
+            ts = null;
+            props = new List<InternalProperty>();
+        }
+    }
+
     class ExcelParser
     {
         private MappingRules mr { get; set; }
@@ -102,10 +125,8 @@ namespace TcfGenerator
         //    tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
         //}
 
-        private void SetProperty(Type t, ITestStep ts, string propertyName, string propertyType, string propertyValue)
+        private void SetProperty(ITestStep ts, PropertyInfo pInfo, string propertyName, string propertyType, string propertyValue)
         {
-            PropertyInfo pInfo = t.GetProperty(propertyName);
-
             if (propertyType == "System.Double")
             {
                 double result;
@@ -115,63 +136,118 @@ namespace TcfGenerator
                 }
             }
 
-        }
-
-        internal class InternalTestStep
-        {
-            internal class InternalProperty
+            else if (propertyType == "System.Int32")
             {
-                public string name { get; set; }
-                public string type { get; set; }
-                public string value { get; set; }
+                int result;
+                if (Int32.TryParse(propertyValue, out result))
+                {
+                    pInfo.SetValue(ts, result, null);
+                }
             }
 
-            public Type t { get; set; }
-            public ITestStep ts { get; set; }
-            public List<InternalProperty> props { get; set; }
-
-            public InternalTestStep()
+            else if (propertyType == "System.String")
             {
-                t = null;
-                ts = null;
-                props = new List<InternalProperty>();
+                pInfo.SetValue(ts, propertyValue, null);
+            }
+
+            else if (propertyType == "System.Boolean")
+            {
+                bool result;
+                if (bool.TryParse(propertyValue, out result))
+                {
+                    pInfo.SetValue(ts, result, null);
+                }
+            }
+
+            else
+            {
+                throw new InvalidDataException
+                    ("Property[" + propertyName + "] type " + propertyType + "is not supported!");
             }
         }
 
-
-        private bool TestStepExist(List<InternalTestStep> its, string testStepName)
+        private InternalTestStep FindTestStep(List<InternalTestStep> its, string testStepName)
         {
-            bool ret = false;
             foreach (var ts in its)
             {
-                if (ts.t.Name == testStepName) return true;
+                if (ts.t.Name == testStepName) return ts;
             }
-            return ret;
+            return null;
         }
 
-        private void CombineTestSteps(List<Tuple<Type, ITestStep, string, string, string>> tss, Tuple<Type, ITestStep> measTestStep)
+        private List<InternalTestStep> CombineTestSteps(List<Tuple<Type, ITestStep, string, string, string, List<ValueMapping>>> tss, Tuple<Type, ITestStep> measTestStep)
         {
-            Tuple<Type, ITestStep> mt = measTestStep;
             List<InternalTestStep> its = new List<InternalTestStep>();
 
+            // Init the measurement test step
+            InternalTestStep measTS = new InternalTestStep();
+            measTS.t = measTestStep.Item1;
+            measTS.ts = measTestStep.Item2;
+
+            // Process the property mapping list
             foreach (var i in tss)
             {
-                if (!TestStepExist(its, i.Item1.Name))
+                // If the test step is the same with the measurement test step
+                // Add the property into measurement test step
+                if (measTS.t.Name == i.Item1.Name)
+                {
+                    InternalTestStep.InternalProperty p =
+                        new InternalTestStep.InternalProperty() { name = i.Item3, type = i.Item4, value = i.Item5, valueMappings = i.Item6 };
+                    measTS.props.Add(p);
+                }
+
+                // If the test step has not been added into the list, add it
+                else if (FindTestStep(its, i.Item1.Name) == null)
                 {
                     InternalTestStep it = new InternalTestStep();
                     it.t = i.Item1;
                     it.ts = i.Item2;
                     InternalTestStep.InternalProperty p =
-                        new InternalTestStep.InternalProperty() { name = i.Item3, type = i.Item4, value = i.Item5 };
+                        new InternalTestStep.InternalProperty() { name = i.Item3, type = i.Item4, value = i.Item5, valueMappings = i.Item6 };
                     it.props.Add(p);
+                    its.Add(it);
                 }
+
+                // If the test step exist in the list, add the property into the test step
                 else
                 {
-
+                    InternalTestStep it = FindTestStep(its, i.Item1.Name);
+                    InternalTestStep.InternalProperty p =
+                        new InternalTestStep.InternalProperty() { name = i.Item3, type = i.Item4, value = i.Item5, valueMappings = i.Item6 };
+                    it.props.Add(p);
                 }
             }
+
+            // Add the measurement test step at the end of the list
+            its.Add(measTS);
+
+            return its;
         }
 
+        private List<ITestStep> GenTestSteps(List<InternalTestStep> testStepList)
+        {
+            List<ITestStep> testSteps = new List<ITestStep>();
+            foreach (var its in testStepList)
+            {
+                foreach (var prop in its.props)
+                {
+                    PropertyInfo pInfo = its.t.GetProperty(prop.name);
+                    if (prop.valueMappings.Count > 0)
+                    {
+                        string realValue = (from v in prop.valueMappings
+                                            where v.ExcelValue == prop.value
+                                            select v.TapValue).Single();
+                        SetProperty(its.ts, pInfo, prop.name, prop.type, realValue);
+                    }
+                    else
+                    {
+                        SetProperty(its.ts, pInfo, prop.name, prop.type, prop.value);
+                    }
+                }
+                testSteps.Add(its.ts);
+            }
+            return testSteps;
+        }
 
         public void ParseExcel(List<string> technologies)
         {
@@ -209,14 +285,20 @@ namespace TcfGenerator
 
                 if (!find) continue;
 
-                List<Tuple<Type, ITestStep, string, string, string>> tss = new List<Tuple<Type, ITestStep, string, string, string>>();
+                List<Tuple<Type, ITestStep, string, string, string, List<ValueMapping>>> tss =
+                    new List<Tuple<Type, ITestStep, string, string, string, List<ValueMapping>>>();
+
+                // TODO: Load Instrument Setting from file
+                PA_Instrument pa_inst = new PA_Instrument();
+                pa_inst.LoadHwConfigFile(@"C:\Program Files\Keysight\Power Amplifier Solution\Site2\SiteInstrument.xml");
+                pa_inst.ParseHwConfigFile();
 
                 foreach (var r in mr.settingMappings)
                 {
                     string v = ReadData(xlWorkSheet, r.ExcelColumn, row);
                     Type t = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + r.TestStep);
                     ITestStep ts;
-                    if (t == typeof(SelectTechnology))
+                    if (t.Name == "SelectTechnology")
                     {
                         ts = (ITestStep)Activator.CreateInstance(t, args: technologies);
                     }
@@ -225,16 +307,20 @@ namespace TcfGenerator
                         ts = (ITestStep)Activator.CreateInstance(t);
                     }
 
-                    tss.Add(new Tuple<Type, ITestStep, string, string, string>(t, ts, r.Property, r.PropertyType, v));
+                    tss.Add(new Tuple<Type, ITestStep, string, string, string, List<ValueMapping>>
+                        (t, ts, r.Property, r.PropertyType, v, r.ValMapping.ToList()));
                 }
 
                 Type tMeas = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + tapStep);
                 var tsMeas = (ITestStep)Activator.CreateInstance(tMeas);
 
-                CombineTestSteps(tss, new Tuple<Type, ITestStep>(tMeas, tsMeas));
+                var internalTestStepList = CombineTestSteps(tss, new Tuple<Type, ITestStep>(tMeas, tsMeas));
+                var testStepList = GenTestSteps(internalTestStepList);
 
-                foreach (var ts in tss)
+                // Generate TestSteps
+                foreach (var ts in testStepList)
                 {
+                    tp.ChildTestSteps.Add(ts);
                 }
             }
 

@@ -3,7 +3,7 @@
                     xmlns:local="clr-namespace:TcfGenerator">
 
     <Style x:Key="infoLabelStyle" TargetType="{x:Type Label}">
-        <Setter Property="Margin" Value="10,1,1,1" />
+        <Setter Property="Margin" Value="1,1,1,1" />
         <Setter Property="HorizontalAlignment" Value="Left" />
         <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="FontWeight" Value="Normal"/>

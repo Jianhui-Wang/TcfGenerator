@@ -30,53 +30,58 @@
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
                         <RowDefinition Height="1*"/>
-                        <RowDefinition Height="1*"/>
                         <RowDefinition Height="0.2*"/>
                         <RowDefinition Height="6*"/>
                     </Grid.RowDefinitions>
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="4*"/>
                         <ColumnDefinition Width="3*"/>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition Width="4*"/>
-                        <ColumnDefinition Width="4*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="3*"/>
+                        <ColumnDefinition Width="2*"/>
+                        <ColumnDefinition Width="2*"/>
                         <ColumnDefinition Width="3*"/>
                     </Grid.ColumnDefinitions>
                     <Label Grid.Row="0" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Note</Label>
                     <TextBox x:Name="excelNote1" Grid.Row="0" Grid.Column="1" Text="Sheet 1"  Style="{StaticResource textStyle}"></TextBox>
 
-                    <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Test Column</Label>
-                    <TextBox x:Name="excelTestColumn" Grid.Row="1" Grid.Column="1" Style="{StaticResource textStyle}" Text="{Binding testNameColumn}"></TextBox>
+                    <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Excel Test Column</Label>
+                    <TextBox x:Name="excelTestColumn" Grid.Row="0" Grid.Column="3" Style="{StaticResource textStyle}" Text="{Binding testNameColumn}"></TextBox>
 
-                    <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Start Row</Label>
-                    <TextBox x:Name="excelStartRow" Grid.Row="2" Grid.Column="1" Text="{Binding rowStart}" Style="{StaticResource textStyle}"></TextBox>
-                    <Label Grid.Row="3" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel End Row</Label>
-                    <TextBox x:Name="excelEndRow" Grid.Row="3" Grid.Column="1" Text="{Binding rowEnd}" Style="{StaticResource textStyle}"></TextBox>
+                    <Label Grid.Row="1" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Excel Start Row</Label>
+                    <TextBox x:Name="excelStartRow" Grid.Row="1" Grid.Column="1" Text="{Binding rowStart}" Style="{StaticResource textStyle}"></TextBox>
+                    <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Excel End Row</Label>
+                    <TextBox x:Name="excelEndRow" Grid.Row="1" Grid.Column="3" Text="{Binding rowEnd}" Style="{StaticResource textStyle}"></TextBox>
 
+                    <Label Grid.Row="2" Grid.Column="0" Style="{StaticResource infoLabelStyle}">Low Limit Column</Label>
+                    <TextBox x:Name="lowLimitCol" Grid.Row="2" Grid.Column="1" Text="{Binding lowLimitColumn}" Style="{StaticResource textStyle}"></TextBox>
+                    <Label Grid.Row="2" Grid.Column="2" Style="{StaticResource infoLabelStyle}">High Limit Column</Label>
+                    <TextBox x:Name="highLimitCol" Grid.Row="2" Grid.Column="3" Text="{Binding highLimitColumn}" Style="{StaticResource textStyle}"></TextBox>
 
-                    <Label Grid.Row="0" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Match Rule</Label>
-                    <ComboBox x:Name="testMappingRule" Grid.Row="0" Grid.Column="3" Style="{StaticResource comboStyle}">
+                    <Label Grid.Row="0" Grid.Column="4" Style="{StaticResource infoLabelStyle}">Match Rule</Label>
+                    <ComboBox x:Name="testMappingRule" Grid.Row="0" Grid.Column="5" Style="{StaticResource comboStyle}">
                         <ComboBoxItem>Equals</ComboBoxItem>
                         <ComboBoxItem>StartWith</ComboBoxItem>
                         <ComboBoxItem>Contains</ComboBoxItem>
                         <ComboBoxItem>EndWith</ComboBoxItem>
                     </ComboBox>
-                    <TextBox x:Name="keyword" Grid.Row="0" Grid.Column="4" Style="{StaticResource textStyle}">Keyword</TextBox>
+                    <TextBox x:Name="keyword" Grid.Row="0" Grid.Column="6" Style="{StaticResource textStyle}">Keyword</TextBox>
 
-                    <Label Grid.Row="2" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Target Test Item</Label>
+                    <Label Grid.Row="2" Grid.Column="4" Style="{StaticResource infoLabelStyle}">Target Test Item</Label>
 
 
-                    <ComboBox x:Name="testStep1" Grid.Row="1" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestStepList}"
+                    <ComboBox x:Name="testStep1" Grid.Row="1" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestStepList}"
                         SelectionChanged="TestStepChanged"  DisplayMemberPath="Item2" SelectedValuePath="Item1"/>
 
-                    <Label Grid.Row="1" Grid.Column="2" Style="{StaticResource infoLabelStyle}">Target Test Step</Label>
-                    <ComboBox x:Name="testItem" Grid.Row="2" Grid.Column="3" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestItemList}"
+                    <Label Grid.Row="1" Grid.Column="4" Style="{StaticResource infoLabelStyle}">Target Test Step</Label>
+                    <ComboBox x:Name="testItem" Grid.Row="2" Grid.Column="5" Grid.ColumnSpan="2" Style="{StaticResource comboStyle}" ItemsSource="{Binding TestItemList}"
                               DisplayMemberPath="Item1" SelectedValuePath="Item2"/>
 
-                    <Button x:Name="AddTestMapping" Click="Add_TestMapping" Grid.Row="0" Grid.Column="5" Style="{StaticResource buttonStyle}">Add</Button>
-                    <Button x:Name="DeleteTestMapping" Click="Delete_TestMapping" Grid.Row="1" Grid.Column="5" Style="{StaticResource buttonStyle}">Delete</Button>
+                    <Button x:Name="AddTestMapping" Click="Add_TestMapping" Grid.Row="0" Grid.Column="8" Style="{StaticResource buttonStyle}">Add</Button>
+                    <Button x:Name="DeleteTestMapping" Click="Delete_TestMapping" Grid.Row="1" Grid.Column="8" Style="{StaticResource buttonStyle}">Delete</Button>
                     <GridSplitter Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5" Height="3" Background="Red" VerticalAlignment="Stretch"></GridSplitter>
-                    <DataGrid x:Name="testMapping" Grid.Row="5" Grid.ColumnSpan="6" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
+                    <DataGrid x:Name="testMapping" Grid.Row="5" Grid.ColumnSpan="9" ItemsSource="{Binding}" CanUserAddRows="False" SelectionMode="Single" 
                   AutoGenerateColumns="False" IsReadOnly="False">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Rule Index" Width="1*" Binding="{Binding Serial}" HeaderStyle="{StaticResource datagridColumnHeaderStyle}" FontWeight="Bold"></DataGridTextColumn>

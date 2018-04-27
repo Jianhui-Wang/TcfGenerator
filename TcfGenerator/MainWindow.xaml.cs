@@ -364,6 +364,28 @@ namespace TcfGenerator
             }
         }
 
+        private string _lowLimitColumn;
+        public string lowLimitColumn
+        {
+            get { return _lowLimitColumn; }
+            set
+            {
+                _lowLimitColumn = value;
+                OnPropertyChanged("lowLimitColumn");
+            }
+        }
+
+        private string _highLimitColumn;
+        public string highLimitColumn
+        {
+            get { return _highLimitColumn; }
+            set
+            {
+                _highLimitColumn = value;
+                OnPropertyChanged("highLimitColumn");
+            }
+        }
+
         public MappingRules()
         {
             testMappings = new ObservableCollection<TestMapping>();
