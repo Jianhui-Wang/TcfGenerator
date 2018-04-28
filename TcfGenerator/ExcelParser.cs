@@ -147,7 +147,15 @@ namespace TcfGenerator
 
             else if (propertyType == "System.String")
             {
-                pInfo.SetValue(ts, propertyValue, null);
+                // Why this happen????
+                //if (propertyName == "technology")
+                //{
+                //    ((SelectTechnology)ts).technology = propertyValue;
+                //}
+                //else
+                {
+                    pInfo.SetValue(ts, propertyValue, null);
+                }
             }
 
             else if (propertyType == "System.Boolean")
@@ -292,6 +300,10 @@ namespace TcfGenerator
                 PA_Instrument pa_inst = new PA_Instrument();
                 pa_inst.LoadHwConfigFile(@"C:\Program Files\Keysight\Power Amplifier Solution\Site2\SiteInstrument.xml");
                 pa_inst.ParseHwConfigFile();
+                pa_inst.config_file = @"C:\Program Files\Keysight\Power Amplifier Solution\Configuration\MEAS_PARAM_SETUP.ini";
+                pa_inst.waveform_path = @"C:\Program Files\Keysight\Power Amplifier Solution\waveform";
+
+                InstrumentSettings.Current.Add(pa_inst);
 
                 foreach (var r in mr.settingMappings)
                 {
@@ -300,7 +312,9 @@ namespace TcfGenerator
                     ITestStep ts;
                     if (t.Name == "SelectTechnology")
                     {
-                        ts = (ITestStep)Activator.CreateInstance(t, args: technologies);
+                        //ts = (ITestStep)Activator.CreateInstance(t, args: technologies);
+                        //ts = (ITestStep)Activator.CreateInstance(t);
+                        ts = new SelectTechnology();
                     }
                     else
                     {
