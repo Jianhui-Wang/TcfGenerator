@@ -76,6 +76,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\..\..\..\Program Files\Keysight\TAP8\Dependencies\System.Collections.Immutable.1.2.2.0\System.Collections.Immutable.dll</HintPath>
     </Reference>
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Data" />
     <Reference Include="System.Reflection.Metadata">
       <HintPath>..\Reference\System.Reflection.Metadata.dll</HintPath>

@@ -64,44 +64,13 @@ namespace TcfGenerator
             excelTestColumn.DataContext = mr;
             excelStartRow.DataContext = mr;
             excelEndRow.DataContext = mr;
+            excelNote.DataContext = mr;
+            excelNote1.DataContext = mr;
+            excelFilename.DataContext = mr;
+            highLimitCol.DataContext = mr;
+            lowLimitCol.DataContext = mr;
         }
 
-        private List<string> fetchList(string testName, string propertyName)
-        {
-            List<string> retValue = new List<string>();
-            XmlNode testStep = null;
-            XmlNode property = null;
-
-            foreach (var ts in Node_TestSteps.ChildNodes)
-            {
-                if (((XmlNode)ts).Attributes["Name"].Value == testName)
-                {
-                    testStep = ts as XmlNode;
-                    break;
-                }
-            }
-            if (testStep != null)
-            {
-                foreach (var prop in testStep.ChildNodes)
-                {
-                    if (((XmlNode)prop).Attributes["Name"].Value == propertyName)
-                    {
-                        property = prop as XmlNode;
-                        break;
-                    }
-                }
-
-            }
-            if (property != null)
-            {
-                foreach (var value in property.ChildNodes)
-                {
-                    retValue.Add(((XmlNode)value).InnerText);
-                }
-            }
-
-            return retValue;
-        }
 
         private void InitializeTestList(string xmlFile)
         {
@@ -124,8 +93,6 @@ namespace TcfGenerator
                 int v = Convert.ToInt16((testitem as XmlNode).Attributes["Value"].Value);
                 TestItemList.Add(new Tuple<string, int>(n, v));
             }
-
-            technologies = fetchList("SelectTechnology", "technology");
         }
 
         private void TestStepChanged(object sender, SelectionChangedEventArgs e)
@@ -241,14 +208,25 @@ namespace TcfGenerator
 
                 FileStream xmlStream = new FileStream(filename, FileMode.Open);
                 object o = serializer.Deserialize(xmlStream);
-                var t = o as MappingRules;
+                mr = o as MappingRules;
                 xmlStream.Close();
-                mr.testMappings = t.testMappings;
-                mr.settingMappings = t.settingMappings;
+
+                settingMapping.DataContext = mr.settingMappings;
+                settingmapping_rule_idx = mr.settingMappings.Count;
                 testMapping.DataContext = mr.testMappings;
                 testmapping_rule_idx = mr.testMappings.Count;
-                settingMapping.DataContext = mr.settingMappings;
-                settingmapping_rule_idx = mrsettingMappings.Count;
+                testItem.DataContext = this;
+                testStep1.DataContext = this;
+                testStep2.DataContext = this;
+                Property.DataContext = this;
+                excelTestColumn.DataContext = mr;
+                excelStartRow.DataContext = mr;
+                excelEndRow.DataContext = mr;
+                excelNote.DataContext = mr;
+                excelNote1.DataContext = mr;
+                excelFilename.DataContext = mr;
+                highLimitCol.DataContext = mr;
+                lowLimitCol.DataContext = mr;
             }
         }
 
@@ -287,8 +265,17 @@ namespace TcfGenerator
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            ExcelParser ep = new ExcelParser(@"c:\Temp\test.xlsx", mr);
+            ExcelParser ep = new ExcelParser(mr);
             ep.ParseExcel(technologies);
+        }
+
+        private void ChooseExcelFile(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog dialog = new OpenFileDialog();
+            if (dialog.ShowDialog() == true)
+            {
+                mr.excelFile = dialog.FileName;
+            }
         }
     }
 
@@ -330,6 +317,29 @@ namespace TcfGenerator
 
         public ObservableCollection<TestMapping> testMappings { get; set; }
         public ObservableCollection<SettingMapping> settingMappings { get; set; }
+
+        private string _excelFile;
+        public string excelFile
+        {
+            get { return _excelFile; }
+            set
+            {
+                _excelFile = value;
+                OnPropertyChanged("excelFile");
+            }
+        }
+
+        private string _excelSheet;
+        public string excelSheet
+        {
+            get { return _excelSheet; }
+            set
+            {
+                _excelSheet = value;
+                OnPropertyChanged("excelSheet");
+            }
+        }
+
 
         private string _rowStart;
         public string rowStart

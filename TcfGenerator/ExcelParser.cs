@@ -10,6 +10,7 @@ using Keysight.S8901A.Measurement.TapSteps;
 using Keysight.S8901A.Measurement.TapInstruments;
 using Keysight.Tap;
 using System.Reflection;
+using System.Configuration;
 
 namespace TcfGenerator
 {
@@ -50,14 +51,14 @@ namespace TcfGenerator
                 return r.Value2.ToString();
         }
 
-        public ExcelParser(string filename, MappingRules mr)
+        public ExcelParser(MappingRules mr)
         {
             this.mr = mr;
             if (mr == null)
                 throw new InvalidDataException("Mapping Rules is null!");
-            if (!File.Exists(filename))
-                throw new FileNotFoundException("Excel File " + filename + " Not Exist!");
-            excelFile = filename;
+            if (!File.Exists(mr.excelFile))
+                throw new FileNotFoundException("Excel File " + mr.excelFile + " Not Exist!");
+            excelFile = mr.excelFile;
             sheetName = @"Sheet1";
         }
 
@@ -147,12 +148,12 @@ namespace TcfGenerator
 
             else if (propertyType == "System.String")
             {
-                // Why this happen????
-                //if (propertyName == "technology")
-                //{
-                //    ((SelectTechnology)ts).technology = propertyValue;
-                //}
-                //else
+                // ??? Why this happen ???
+                if (propertyName == "technology")
+                {
+                    ((SelectTechnology)ts).technology = propertyValue;
+                }
+                else
                 {
                     pInfo.SetValue(ts, propertyValue, null);
                 }
@@ -257,6 +258,49 @@ namespace TcfGenerator
             return testSteps;
         }
 
+        private void SetLimit(ITestStep measStep, TestItem_Enum testItem, string limitHigh, string limitLow)
+        {
+            double lowD, highD;
+            PropertyInfo pInfo;
+
+            switch (testItem)
+            {
+                case TestItem_Enum.PIN:
+                    if (!Double.TryParse(limitLow, out lowD))
+                    {
+                        throw new InvalidDataException("Low Limit invalid!");
+                    }
+                    if (!Double.TryParse(limitHigh, out highD))
+                    {
+                        throw new InvalidDataException("High Limit invalid!");
+                    }
+                    pInfo = measStep.GetType().GetProperty("pin_low_limit");
+                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
+                    pInfo = measStep.GetType().GetProperty("pin_high_limit");
+                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
+                    break;
+
+                case TestItem_Enum.POUT:
+                    if (!Double.TryParse(limitLow, out lowD))
+                    {
+                        throw new InvalidDataException("Low Limit invalid!");
+                    }
+                    if (!Double.TryParse(limitHigh, out highD))
+                    {
+                        throw new InvalidDataException("High Limit invalid!");
+                    }
+                    pInfo = measStep.GetType().GetProperty("pout_low_limit");
+                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
+                    pInfo = measStep.GetType().GetProperty("pout_high_limit");
+                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+
         public void ParseExcel(List<string> technologies)
         {
             Excel.Application xlApp;
@@ -266,7 +310,9 @@ namespace TcfGenerator
             xlApp = new Excel.Application();
             xlWorkBook = xlApp.Workbooks.Open(excelFile);
             xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.Item[sheetName];
-            var testName_Column = mr.testNameColumn; // TODO: testName Column need to be inclued in MappingRules
+            var testName_Column = mr.testNameColumn;
+            var limitLow_Column = mr.lowLimitColumn;
+            var limitHigh_Column = mr.highLimitColumn;
             int rowStart, rowEnd;
             bool result;
 
@@ -286,6 +332,8 @@ namespace TcfGenerator
             {
                 int row = i;
                 string tn = ReadData(xlWorkSheet, testName_Column, row);
+                string limitLow = ReadData(xlWorkSheet, limitLow_Column, row);
+                string limitHigh = ReadData(xlWorkSheet, limitHigh_Column, row);
 
                 string tapStep;
                 TestItem_Enum tapTestItem;
@@ -298,10 +346,11 @@ namespace TcfGenerator
 
                 // TODO: Load Instrument Setting from file
                 PA_Instrument pa_inst = new PA_Instrument();
-                pa_inst.LoadHwConfigFile(@"C:\Program Files\Keysight\Power Amplifier Solution\Site2\SiteInstrument.xml");
+
+                pa_inst.LoadHwConfigFile(ConfigurationManager.AppSettings["SiteInstrument"]);
                 pa_inst.ParseHwConfigFile();
-                pa_inst.config_file = @"C:\Program Files\Keysight\Power Amplifier Solution\Configuration\MEAS_PARAM_SETUP.ini";
-                pa_inst.waveform_path = @"C:\Program Files\Keysight\Power Amplifier Solution\waveform";
+                pa_inst.config_file = ConfigurationManager.AppSettings["IniConfig"];
+                pa_inst.waveform_path = ConfigurationManager.AppSettings["WaveformPath"];
 
                 InstrumentSettings.Current.Add(pa_inst);
 
@@ -327,6 +376,7 @@ namespace TcfGenerator
 
                 Type tMeas = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + tapStep);
                 var tsMeas = (ITestStep)Activator.CreateInstance(tMeas);
+                SetLimit(tsMeas, tapTestItem, limitHigh, limitLow);
 
                 var internalTestStepList = CombineTestSteps(tss, new Tuple<Type, ITestStep>(tMeas, tsMeas));
                 var testStepList = GenTestSteps(internalTestStepList);
@@ -338,7 +388,7 @@ namespace TcfGenerator
                 }
             }
 
-            tp.Save(@"c:\temp\1.tapplan");
+            tp.Save(ConfigurationManager.AppSettings["TapPlanFile"]);
         }
     }
 }
