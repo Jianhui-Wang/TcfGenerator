@@ -38,7 +38,6 @@ namespace TcfGenerator
         private int teststep_idx; /* Selected item index of the teststep ComboBox */
         private int testmapping_rule_idx; /* the top cursor of the TestMappings array */
         private int settingmapping_rule_idx; /* the top cursor of the SettingMappings array */
-        private List<string> technologies = new List<string>();
         public MappingRules mr;
 
         public MainWindow()
@@ -266,7 +265,7 @@ namespace TcfGenerator
         private void Button_Click(object sender, RoutedEventArgs e)
         {
             ExcelParser ep = new ExcelParser(mr);
-            ep.ParseExcel(technologies);
+            ep.ParseExcel();
         }
 
         private void ChooseExcelFile(object sender, RoutedEventArgs e)
@@ -408,10 +407,16 @@ namespace TcfGenerator
         }
     }
 
-    public class ValueMapping
+    public class ValueMapping : IEquatable<ValueMapping>
     {
         public string ExcelValue { get; set; }
         public string TapValue { get; set; }
+        public bool Equals(ValueMapping vm)
+        {
+            if (ExcelValue != vm.ExcelValue) return false;
+            if (TapValue != vm.TapValue) return false;
+            return true;
+        }
     }
 
 }

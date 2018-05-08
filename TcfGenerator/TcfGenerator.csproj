@@ -36,17 +36,81 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Connectivity.IolsSetupComponent.IolsSetupClient, Version=18.0.0.0, Culture=neutral, PublicKeyToken=7a01cdb2a9131f73, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Reference\Connectivity.IolsSetupComponent.IolsSetupClient.dll</HintPath>
+    </Reference>
     <Reference Include="Keysight.Ccl.Wsl, Version=3.2.21601.10006, Culture=neutral, PublicKeyToken=55333af07c70062e, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Reference\Keysight.Ccl.Wsl.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.AwgPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.AwgPlugins.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Common.BasePlugins, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Reference\Keysight.S8901A.Common.BasePlugins.dll</HintPath>
     </Reference>
+    <Reference Include="Keysight.S8901A.Common.ChassisPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.ChassisPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.DigitizerPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.DigitizerPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.DioPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.DioPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.DpdetPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.DpdetPlugins.dll</HintPath>
+    </Reference>
     <Reference Include="Keysight.S8901A.Common.KmfPlugins, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Reference\Keysight.S8901A.Common.KmfPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.MeasurementDataCommunication">
+      <HintPath>..\Reference\Keysight.S8901A.Common.MeasurementDataCommunication.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.NoiseSourcePlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.NoiseSourcePlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.PowerSensorPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.PowerSensorPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.ReferencePlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.ReferencePlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.ScopePlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.ScopePlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.ScpiPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.ScpiPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.SmuPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.SmuPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.SwitchPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.SwitchPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.VnaPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.VnaPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.Vsa89600Plugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.Vsa89600Plugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.VsaPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.VsaPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.VsaXappPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.VsaXappPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.VsgPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.VsgPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.VxtPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.VxtPlugins.dll</HintPath>
+    </Reference>
+    <Reference Include="Keysight.S8901A.Common.XappPlugins">
+      <HintPath>..\Reference\Keysight.S8901A.Common.XappPlugins.dll</HintPath>
     </Reference>
     <Reference Include="Keysight.S8901A.Measurement.Apis, Version=1.3.0.5, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -156,9 +220,6 @@
       <Isolated>False</Isolated>
       <EmbedInteropTypes>True</EmbedInteropTypes>
     </COMReference>
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Service References\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
