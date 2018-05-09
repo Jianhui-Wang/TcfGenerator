@@ -542,6 +542,8 @@ namespace TcfGenerator
             }
 
             tp.Save(ConfigurationManager.AppSettings["TapPlanFile"]);
+
+            xlWorkBook.Close();
         }
     }
 }
