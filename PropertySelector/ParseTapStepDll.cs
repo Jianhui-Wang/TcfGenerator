@@ -322,13 +322,15 @@ namespace PropertySelector
                     testSteps.Add(ts);
                 }
 
-                GetEnumsAndTestItems();
+                GetEnums();
             }
+
+            GetTestItems();
 
             return testSteps;
         }
 
-        static void GetEnumsAndTestItems()
+        static void GetEnums()
         {
             // For the moment, only support Enumeration and 
             // all the Enum definitions should be in Base plugin
@@ -367,12 +369,22 @@ namespace PropertySelector
                             }
                         }
                     }
+                }
+            }
+        }
 
-                    for (int i = 0; i < Enum.GetNames(typeof(TestItem_Enum)).Count(); i++)
-                    {
-                        testItems.Add(new Tuple<string, TestItem_Enum>(Enum.GetNames(typeof(TestItem_Enum))[i],
-                                     ((TestItem_Enum[])(Enum.GetValues(typeof(TestItem_Enum))))[i]));
-                    }
+        static void GetTestItems()
+        {
+            var curDir = Directory.GetCurrentDirectory();
+            var baseDll = curDir + "\\" + BasePlugin;
+
+            var plugin = Assembly.LoadFrom(baseDll);
+            if (plugin != null)
+            {
+                for (int i = 0; i < Enum.GetNames(typeof(TestItem_Enum)).Count(); i++)
+                {
+                    testItems.Add(new Tuple<string, TestItem_Enum>(Enum.GetNames(typeof(TestItem_Enum))[i],
+                                    ((TestItem_Enum[])(Enum.GetValues(typeof(TestItem_Enum))))[i]));
                 }
             }
         }
