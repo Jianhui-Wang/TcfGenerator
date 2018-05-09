@@ -82,6 +82,55 @@ namespace TcfGenerator
 
     class ExcelParser
     {
+        static Dictionary<TestItem_Enum, Tuple<string, string, string, string>> supportedTestPoints =
+            new Dictionary<TestItem_Enum, Tuple<string, string, string, string>>
+            {
+                #region PIN
+                { TestItem_Enum.PIN,  new Tuple<string, string, string, string>(
+                    "System.Double",
+                    "meas_pin",
+                    "pin_low_limit",
+                    "pin_high_limit")
+                },
+                #endregion
+
+                #region POUT
+                { TestItem_Enum.POUT, new Tuple<string, string, string, string>(
+                    "System.Double",
+                    null,
+                    "pout_low_limit",
+                    "pout_high_limit")
+                },
+                #endregion
+
+                #region PA_GAIN
+                { TestItem_Enum.PA_GAIN, new Tuple<string, string, string, string>(
+                    "System.Double",
+                    "meas_gain",
+                    "gain_low_limit",
+                    "gain_high_limit")
+                },
+                #endregion
+
+                #region ICC
+                { TestItem_Enum.ICC, new Tuple<string, string, string, string>(
+                    "System.Double",
+                    "meas_icc",
+                    "icc_low_limit",
+                    "icc_high_limit")
+                },
+                #endregion
+
+                #region ACPR_H1
+                { TestItem_Enum.ACPR_H1, new Tuple<string, string, string, string>(
+                    "System.Double",
+                    "meas_acpr_h1",
+                    "acpr_h1_low_limit",
+                    "acpr_h1_high_limit")
+                },
+                #endregion
+            };
+
         private MappingRules mr { get; set; }
         private string excelFile { get; set; }
         private string sheetName { get; set; }
@@ -152,25 +201,6 @@ namespace TcfGenerator
             return t;
         }
 
-        //public void ParseExcel(List<string> s)
-        //{
-        //    SessionLogs.Load(Directory.GetCurrentDirectory() + "\\Session_log.txt");
-
-        //    var plugin = Assembly.LoadFrom(@"C:\Drive_E\PA_Learning\PilotProject\TcfGenerator\ParseTapStepDll\Keysight.S8901A.Measurement.TapSteps.dll");
-
-        //    TestPlan tp = new TestPlan();
-
-        //    Type t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.SelectTechnology");
-        //    ITestStep ts = (ITestStep)Activator.CreateInstance(t, args:s);
-        //    tp.Steps.Add(ts);
-
-        //    t = plugin.GetType("Keysight.S8901A.Measurement.TapSteps.Source_Analyzer_Setup");
-        //    ts = (ITestStep)Activator.CreateInstance(t);
-        //    tp.Steps.Add(ts);
-
-        //    tp.Save(Directory.GetCurrentDirectory() + "\\1.tapplan");
-        //}
-
         private void SetProperty(ITestStep ts, PropertyInfo pInfo, string propertyName, string propertyType, string propertyValue)
         {
             if (propertyType == "System.Double")
@@ -227,15 +257,6 @@ namespace TcfGenerator
             }
         }
 
-        private InternalTestStep FindTestStep(List<InternalTestStep> its, string testStepName)
-        {
-            foreach (var ts in its)
-            {
-                if (ts.t.Name == testStepName) return ts;
-            }
-            return null;
-        }
-
         private List<InternalTestStep> CombineTestConditions(List<Tuple<Type, ITestStep, string, string, string, List<ValueMapping>>> tss)
         {
             List<InternalTestStep> its = new List<InternalTestStep>();
@@ -246,7 +267,7 @@ namespace TcfGenerator
                 InternalTestStep it;
 
                 // If the test step has not been added into the list, add it
-                if ((it = FindTestStep(its, i.Item1.Name)) == null)
+                if ((it = its.Find(e => e.t.Name == i.Item1.Name)) == null)
                 {
                     it = new InternalTestStep();
                     it.t = i.Item1;
@@ -288,16 +309,8 @@ namespace TcfGenerator
             {
                 foreach (var meas in item.measurements)
                 {
-                    foreach (var tc in item.test_conditions)
-                    {
-                        if (tc.t.FullName == meas.t.FullName)
-                        {
-                            foreach (var p in tc.props)
-                            {
-                                meas.props.Add(p);
-                            }
-                        }
-                    }
+                    var tcs = item.test_conditions.FindAll(tc => tc.t.FullName == meas.t.FullName);
+                    tcs.ForEach(tc => meas.props.AddRange(tc.props));
                 }
 
                 foreach (var meas in item.measurements)
@@ -368,107 +381,50 @@ namespace TcfGenerator
 
         private void SetTestPoint(ITestStep measStep, TestItem_Enum testItem, string limitHigh, string limitLow)
         {
-            double lowD, highD;
             PropertyInfo pInfo;
+            double lowD, highD;
+            string tpType, tpField, tpLimitLowField, tpLimitHighField;
 
-            switch (testItem)
+            Tuple<string, string, string, string> tpInfo;
+            bool result = supportedTestPoints.TryGetValue(testItem, out tpInfo);
+
+            if (result)
             {
-                case TestItem_Enum.PIN:
-                    #region PIN
-                    if (!Double.TryParse(limitLow, out lowD))
-                    {
-                        throw new InvalidDataException("Low Limit invalid!");
-                    }
-                    if (!Double.TryParse(limitHigh, out highD))
-                    {
-                        throw new InvalidDataException("High Limit invalid!");
-                    }
-                    pInfo = measStep.GetType().GetProperty("meas_pin");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, "true");
-                    pInfo = measStep.GetType().GetProperty("pin_low_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
-                    pInfo = measStep.GetType().GetProperty("pin_high_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
-                    #endregion
-                    break;
-
-                case TestItem_Enum.POUT:
-                    #region POUT
-                    if (!Double.TryParse(limitLow, out lowD))
-                    {
-                        throw new InvalidDataException("Low Limit invalid!");
-                    }
-                    if (!Double.TryParse(limitHigh, out highD))
-                    {
-                        throw new InvalidDataException("High Limit invalid!");
-                    }
-                    pInfo = measStep.GetType().GetProperty("pout_low_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
-                    pInfo = measStep.GetType().GetProperty("pout_high_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
-                    #endregion
-                    break;
-
-                case TestItem_Enum.PA_GAIN:
-                    #region PA_GAIN
-                    if (!Double.TryParse(limitLow, out lowD))
-                    {
-                        throw new InvalidDataException("Low Limit invalid!");
-                    }
-                    if (!Double.TryParse(limitHigh, out highD))
-                    {
-                        throw new InvalidDataException("High Limit invalid!");
-                    }
-                    pInfo = measStep.GetType().GetProperty("meas_gain");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, "true");
-                    pInfo = measStep.GetType().GetProperty("gain_low_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
-                    pInfo = measStep.GetType().GetProperty("gain_high_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
-                    #endregion
-                    break;
-
-                case TestItem_Enum.ICC:
-                    #region ICC
-                    if (!Double.TryParse(limitLow, out lowD))
-                    {
-                        throw new InvalidDataException("Low Limit invalid!");
-                    }
-                    if (!Double.TryParse(limitHigh, out highD))
-                    {
-                        throw new InvalidDataException("High Limit invalid!");
-                    }
-                    pInfo = measStep.GetType().GetProperty("meas_icc");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, "true");
-                    pInfo = measStep.GetType().GetProperty("icc_low_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
-                    pInfo = measStep.GetType().GetProperty("icc_high_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
-                    #endregion
-                    break;
-
-                case TestItem_Enum.ACPR_H1:
-                    #region ACPR_H1
-                    if (!Double.TryParse(limitLow, out lowD))
-                    {
-                        throw new InvalidDataException("Low Limit invalid!");
-                    }
-                    if (!Double.TryParse(limitHigh, out highD))
-                    {
-                        throw new InvalidDataException("High Limit invalid!");
-                    }
-                    pInfo = measStep.GetType().GetProperty("meas_acpr_h1");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, "true");
-                    pInfo = measStep.GetType().GetProperty("acpr_h1_low_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
-                    pInfo = measStep.GetType().GetProperty("acpr_h1_high_limit");
-                    SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
-                    #endregion
-                    break;
-
-                default:
-                    break;
+                tpType = tpInfo.Item1;
+                tpField = tpInfo.Item2;
+                tpLimitLowField = tpInfo.Item3;
+                tpLimitHighField = tpInfo.Item4;
             }
+            else
+            {
+                throw new Exception("Test Item not exist:" + testItem.ToString());
+            }
+
+            if (tpType == "System.Double")
+            {
+                if (!Double.TryParse(limitLow, out lowD))
+                {
+                    throw new InvalidDataException("Low Limit invalid!");
+                }
+                if (!Double.TryParse(limitHigh, out highD))
+                {
+                    throw new InvalidDataException("High Limit invalid!");
+                }
+            }
+            else
+            {
+                throw new Exception("Test Point type is not supported:" + tpType);
+            }
+
+            if (tpField != null)
+            {
+                pInfo = measStep.GetType().GetProperty(tpField);
+                SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, "true");
+            }
+            pInfo = measStep.GetType().GetProperty(tpLimitLowField);
+            SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitLow);
+            pInfo = measStep.GetType().GetProperty(tpLimitHighField);
+            SetProperty(measStep, pInfo, pInfo.Name, pInfo.PropertyType.FullName, limitHigh);
         }
 
         public void ParseExcel()
@@ -546,31 +502,20 @@ namespace TcfGenerator
 
                 Type tMeas = PluginGetType("Keysight.S8901A.Measurement.TapSteps." + tapStep);
                 var tsMeas = (ITestStep)Activator.CreateInstance(tMeas);
-                //SetLimit(tsMeas, tapTestItem, limitHigh, limitLow);
 
                 var testconditions = CombineTestConditions(tss);
                 var testitem = CreateTestItem(testconditions,
                     new Tuple<Type, ITestStep, TestItem_Enum, string, string>
                     (tMeas, tsMeas, tapTestItem, limitHigh, limitLow));
 
-                bool found = false;
-                int idx = 0;
-                foreach (var ti in testitem_list)
-                {
-                    if (testconditions.SequenceEqual(ti.test_conditions))
-                    {
-                        found = true;
-                        idx = testitem_list.IndexOf(ti);
-                    }
-                }
-                if (!found)
+                var element = testitem_list.Find(e => testconditions.SequenceEqual(e.test_conditions));
+
+                if (element == null)
                 {
                     testitem_list.Add(testitem);
                 }
                 else
                 {
-                    var element = testitem_list.ElementAt(idx);
-
                     // This should be only 1 measurement
                     var meas = testitem.measurements.Single();
 

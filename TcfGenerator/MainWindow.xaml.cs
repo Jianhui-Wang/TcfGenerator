@@ -19,6 +19,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using Keysight.S8901A.Common;
 using System.ComponentModel;
+using System.Configuration;
 
 namespace TcfGenerator
 {
@@ -52,7 +53,8 @@ namespace TcfGenerator
             settingmapping_rule_idx = 0;
             testmapping_rule_idx = 0;
 
-            InitializeTestList(@"c:\temp\test.xml");
+            var XmlFile = ConfigurationManager.AppSettings["TapStepFieldXml"];
+            InitializeTestList(XmlFile);
 
             settingMapping.DataContext = mr.settingMappings;
             testMapping.DataContext = mr.testMappings;
@@ -266,6 +268,7 @@ namespace TcfGenerator
         {
             ExcelParser ep = new ExcelParser(mr);
             ep.ParseExcel();
+            MessageBox.Show("TAP Plan generated!");
         }
 
         private void ChooseExcelFile(object sender, RoutedEventArgs e)
