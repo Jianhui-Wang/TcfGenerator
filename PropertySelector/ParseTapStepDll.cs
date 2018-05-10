@@ -225,7 +225,11 @@ namespace PropertySelector
             for (int i = 0; i < TapStepsDlls.Length; i++)
             {
                 var dllName = curDir + "\\" + TapStepsDlls[i];
-                foreach (var a in GetAllTypes(dllName, typeof(TestStep)))
+                foreach (var a in GetAllTypes(dllName, typeof(TestStep)).
+                    Where(x => (!x.IsDefined(typeof(BrowsableAttribute))) ||
+                               (x.IsDefined(typeof(BrowsableAttribute)) &&
+                               (x.GetCustomAttribute(typeof(BrowsableAttribute)) as BrowsableAttribute).Browsable == true)
+                         ))
                 {
                     string DisplayName = a.Name;
                     ObservableCollection<TapSetting> settings = new ObservableCollection<TapSetting>();
